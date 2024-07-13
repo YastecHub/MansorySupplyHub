@@ -1,6 +1,7 @@
 ﻿using MansorySupplyHub.Data;
 using MansorySupplyHub.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace MansorySupplyHub.Controllers
 {
@@ -27,6 +28,14 @@ namespace MansorySupplyHub.Controllers
         //Get-UPSERT(Creating a get for create and updates)
         public IActionResult Upsert(int? Id)
         {
+            IEnumerable<SelectListItem> CategoryDropDown = _db.Categories.Select(i => new SelectListItem
+            {
+                Text = i.Name,
+                    Value = i.id.ToString()
+            });
+            ViewBag.CategoryDropDown = CategoryDropDown;
+
+
             Product product = new Product();
             if (Id == null)
             {
@@ -35,6 +44,7 @@ namespace MansorySupplyHub.Controllers
             }
             else
             {
+                //for update
                 product = _db.Products.Find(Id);
                 if (product == null)
                 {
