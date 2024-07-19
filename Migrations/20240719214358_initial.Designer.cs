@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MansorySupplyHub.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240712173758_AddProduct")]
-    partial class AddProduct
+    [Migration("20240719214358_initial")]
+    partial class initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,7 +24,7 @@ namespace MansorySupplyHub.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("MansorySupplyHub.Models.ApplicationType", b =>
+            modelBuilder.Entity("MansorySupplyHub.Entities.ApplicationType", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -41,13 +41,13 @@ namespace MansorySupplyHub.Migrations
                     b.ToTable("ApplicationTypes");
                 });
 
-            modelBuilder.Entity("MansorySupplyHub.Models.Category", b =>
+            modelBuilder.Entity("MansorySupplyHub.Entities.Category", b =>
                 {
-                    b.Property<int>("id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("DisplayOrder")
                         .HasColumnType("int");
@@ -56,18 +56,21 @@ namespace MansorySupplyHub.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("id");
+                    b.HasKey("Id");
 
                     b.ToTable("Categories");
                 });
 
-            modelBuilder.Entity("MansorySupplyHub.Models.Product", b =>
+            modelBuilder.Entity("MansorySupplyHub.Entities.Product", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ApplicationTypeId")
+                        .HasColumnType("int");
 
                     b.Property<int>("CategoryId")
                         .HasColumnType("int");
@@ -89,18 +92,28 @@ namespace MansorySupplyHub.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ApplicationTypeId");
+
                     b.HasIndex("CategoryId");
 
                     b.ToTable("Products");
                 });
 
-            modelBuilder.Entity("MansorySupplyHub.Models.Product", b =>
+            modelBuilder.Entity("MansorySupplyHub.Entities.Product", b =>
                 {
-                    b.HasOne("MansorySupplyHub.Models.Category", "Category")
+                    b.HasOne("MansorySupplyHub.Entities.ApplicationType", "ApplicationType")
+                        .WithMany()
+                        .HasForeignKey("ApplicationTypeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MansorySupplyHub.Entities.Category", "Category")
                         .WithMany()
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("ApplicationType");
 
                     b.Navigation("Category");
                 });

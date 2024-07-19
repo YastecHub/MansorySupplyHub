@@ -1,11 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace MansorySupplyHub.Models
+namespace MansorySupplyHub.Entities
 {
-    public class ApplicationType
+    public class ApplicationType : BaseEntity
     {
-        [Key]
-        public int Id { get; set; }
         [Required]
         public string Name { get; set; }
     }

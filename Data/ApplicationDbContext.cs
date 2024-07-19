@@ -1,4 +1,4 @@
-﻿using MansorySupplyHub.Models;
+﻿using MansorySupplyHub.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace MansorySupplyHub.Data

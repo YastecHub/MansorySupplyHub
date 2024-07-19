@@ -1,4 +1,6 @@
 using MansorySupplyHub.Data;
+using MansorySupplyHub.Implementation.Interface;
+using MansorySupplyHub.Implementation.Services;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -8,6 +10,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer
                                                      (builder.Configuration.GetConnectionString("Default Connection")));
+
+
+
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IApplicationTypeService, ApplicationTypeService>();
+builder.Services.AddScoped<IProductService, ProductService>();
+
 
 var app = builder.Build();
 

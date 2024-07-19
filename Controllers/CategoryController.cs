@@ -1,104 +1,92 @@
-﻿using MansorySupplyHub.Data;
-using MansorySupplyHub.Models;
+﻿using MansorySupplyHub.Dto;
+using MansorySupplyHub.Entities;
+using MansorySupplyHub.Implementation.Interface;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MansorySupplyHub.Controllers
 {
+    [Route("api/[controller]")]
+    [ApiController]
     public class CategoryController : Controller
     {
-        private readonly ApplicationDbContext _db;
+        private readonly ICategoryService _categoryService;
 
-        public CategoryController(ApplicationDbContext db)
+        public CategoryController(ICategoryService categoryService)
         {
-            _db = db;
+            _categoryService = categoryService;
         }
 
-        public IActionResult Index()
+        [HttpGet("categories")]
+        public async Task<IActionResult> Index()
         {
-            IEnumerable<Category> objList = _db.Categories;
-            return View(objList);
-        }
+            var category = await _categoryService.GetAllCategories();
+            if (category.Success)
+            {
+                return View(category.Data);
+            }
 
-        //Get-CREATE
-        public IActionResult Create()
-        {
             return View();
         }
 
-        //POST-CREATE
-        [HttpPost]
+        [HttpGet("category/{id}")]
+        public async Task<IActionResult> Category(int id)
+        {
+            var category = await _categoryService.GetCategoryDetails(id);
+            if (category.Success)
+            {
+                return View(category.Data);
+            }
+            return RedirectToAction("Index");
+        }
+
+        [HttpGet("create-category")]
+        public IActionResult CreateCategory() =>
+             View();
+
+        [HttpPost("create-category")]
+        public async Task<IActionResult> CreateCategory([FromForm] CreateCategoryDto request)
+        {
+            var result = await _categoryService.CreateCategory(request);
+            if (result.Success)
+            {
+                return RedirectToAction("Index");
+            }
+            return RedirectToAction("CreateCategory");
+        }
+
+        [HttpGet("category/edit/{id}")]
+        public async Task<IActionResult> EditCategory(int id)
+        {
+            var response = await _categoryService.GetCategoryDetails(id);
+            if (response.Success)
+            {
+                return View(response.Data);
+            }
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost("category/edit/{id}")]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(Category obj)
+        public async Task<IActionResult> EditCategory(int id, [FromForm] UpdateCategoryDto request)
         {
-            if (ModelState.IsValid)
+            var result = await _categoryService.EditCategory(request, id);
+            if (result.Success)
             {
-                _db.Categories.Add(obj);
-                _db.SaveChanges();
-                return RedirectToAction("index");
+                return RedirectToAction(nameof(Index));
             }
-            return View(obj);
-        }
-
-        //Get-EDIT
-        public IActionResult Edit(int? id)
-        {
-            if (id == null || id == 0)
-            {
-                return NotFound();
-            }
-            var obj = _db.Categories.Find(id);
-            if (obj == null)
-            {
-                return NotFound();
-            }
-
-            return View(obj);
-        }
-
-        //POST-EDIT
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult Edit(Category obj)
-        {
-            if (ModelState.IsValid)
-            {
-                _db.Categories.Update(obj);
-                _db.SaveChanges();
-                return RedirectToAction("index");
-            }
-            return View(obj);
+            return RedirectToAction("Index");
         }
 
 
-        //GET-DELETE
-        public IActionResult Delete(int? id)
+        [HttpGet("category/delete/{id}")]
+        public async Task<IActionResult> DeleteCategory([FromRoute] int id)
         {
-            if (id == null || id == 0)
+            var result = await _categoryService.DeleteCategory(id);
+            if (result.Success)
             {
-                return NotFound();
+                return RedirectToAction(nameof(Index));
             }
-            var obj = _db.Categories.Find(id);
-            if (obj == null)
-            {
-                return NotFound();
-            }
-
-            return View(obj);
-        }
-
-        //POST-DELETE
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult DeleteConfirmed(int? id)
-        {
-            var obj = _db.Categories.Find(id);
-            if (obj == null)
-            {
-                return NotFound();
-            }
-            _db.Categories.Remove(obj);
-            _db.SaveChanges();
-            return RedirectToAction("index");
+            return RedirectToAction(nameof(Index));
         }
     }
 }
