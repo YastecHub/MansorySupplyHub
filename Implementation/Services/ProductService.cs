@@ -28,6 +28,8 @@ namespace MansorySupplyHub.Implementation.Services
                 Description = request.Description,
                 Price = request.Price,
                 Image = request.Image,
+                Category = request.Category,
+                ApplicationType = request.ApplicationType,
                 CategoryId = request.CategoryId,
                 ApplicationTypeId = request.ApplicationTypeId,
             };
@@ -59,7 +61,6 @@ namespace MansorySupplyHub.Implementation.Services
             product.Description = request.Description;
             product.Price = request.Price;
             product.Image = request.Image;
-            product.CategoryId = request.CategoryId;
 
             _dbcontext.Products.Update(product);
             await _dbcontext.SaveChangesAsync();
@@ -71,7 +72,6 @@ namespace MansorySupplyHub.Implementation.Services
                 Description = product.Description,
                 Price = product.Price,
                 Image = product.Image,
-                CategoryId = product.CategoryId,
                 Category = _dbcontext.Categories.FirstOrDefault(c => c.Id == product.CategoryId)
             };
 
@@ -105,11 +105,14 @@ namespace MansorySupplyHub.Implementation.Services
                 Success = true,
                 Message = "Product deleted successfully."
             };
-        }
+        } 
 
         public async Task<ResponseModel<List<ProductDto>>> GetAllProducts()
         {
-            var products = await _dbcontext.Products.Include(p => p.Category).ToListAsync();
+            var products = await _dbcontext.Products.
+                Include(p => p.Category)
+                .Include(p => p.ApplicationType).
+                ToListAsync();
 
             var productDtos = products.Select(product => new ProductDto
             {
@@ -119,7 +122,9 @@ namespace MansorySupplyHub.Implementation.Services
                 Price = product.Price,
                 Image = product.Image,
                 CategoryId = product.CategoryId,
-                Category = product.Category
+                Category = product.Category,
+                ApplicationTypeId = product.ApplicationTypeId,
+                ApplicationType = product.ApplicationType,
             }).ToList();
 
             return new ResponseModel<List<ProductDto>>
@@ -136,7 +141,7 @@ namespace MansorySupplyHub.Implementation.Services
             if (product == null)
             {
                 return new ResponseModel<ProductDto>
-                {
+                { 
                     Data = null,
                     Success = false,
                     Message = "Product not found."
@@ -150,8 +155,10 @@ namespace MansorySupplyHub.Implementation.Services
                 Description = product.Description,
                 Price = product.Price,
                 Image = product.Image,
+                Category = product.Category,
+                ApplicationType = product.ApplicationType,
                 CategoryId = product.CategoryId,
-                Category = product.Category
+                ApplicationTypeId = product.ApplicationTypeId,
             };
 
             return new ResponseModel<ProductDto>
@@ -169,7 +176,8 @@ namespace MansorySupplyHub.Implementation.Services
                 Text = c.Name,
                 Value = c.Id.ToString()
             }).ToListAsync();
-        }
+        } 
+
         public async Task<IEnumerable<SelectListItem>> GetApplicationTypeSelectList()
         {
             return await _dbcontext.ApplicationTypes.Select(at => new SelectListItem

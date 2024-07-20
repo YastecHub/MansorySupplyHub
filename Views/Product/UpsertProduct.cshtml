@@ -89,12 +89,12 @@
                         <div class="col">
                             @if (Model.Id != 0)
                             {
-                //update
+                                       //update
                                 <input type="submit" class="btn btn-info w-100" value="Update" />
                             }
                             else
                             {
-                //create
+                                         //create
                                 <input type="submit" onclick="return validateInput()" class="btn btn-primary w-100" value="Create" />
                             }
                         </div>
@@ -105,15 +105,14 @@
                 </div>
             </div>
 
-            <div class="col-4 ">
+            <div class="col-4">
 
                 @if (Model.Id != 0)
                 {
-                    <img src="@WC.ImagePath@Model.Image" width="100%" style="border-radius:5px; border:1px solid #bbb" />
+                    <img src="@WC.ImagePath@Model.Image"width="100%" style="border-radius:5px; border:1px solid #bbb" />
                 }
             </div>
         </div>
-    </div>
     </div>
 </form>
 

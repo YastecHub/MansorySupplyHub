@@ -27,7 +27,8 @@ namespace MansorySupplyHub.Controllers
             {
                 return View(response.Data);
             }
-            return View("Error", new ErrorViewModel { Message = response.Message });
+            _notyf.Error("Failed to load products");
+            return View(new List<ProductDto>());
         }
 
         // GET-UPSERT
@@ -77,6 +78,8 @@ namespace MansorySupplyHub.Controllers
                     Description = productDto.Description,
                     Price = productDto.Price,
                     Image = productDto.Image,
+                    ApplicationType = productDto.ApplicationType,
+                    Category = productDto.Category,
                     CategoryId = productDto.CategoryId,
                     ApplicationTypeId = productDto.ApplicationTypeId,
                 };
@@ -128,6 +131,8 @@ namespace MansorySupplyHub.Controllers
                     Description = productDto.Description,
                     Price = productDto.Price,
                     Image = productDto.Image,
+                    Category = productDto.Category,
+                     ApplicationType = productDto.ApplicationType,
                     CategoryId = productDto.CategoryId, 
                     ApplicationTypeId = productDto.ApplicationTypeId,
                 };
@@ -141,12 +146,13 @@ namespace MansorySupplyHub.Controllers
                     _notyf.Success("Product updated successfully");
                     return RedirectToAction("Index");
                 }
-                _notyf.Success("Failed to update product");
+                _notyf.Error("Failed to update product");
                 return RedirectToAction("UpsertProduct");
             }
               return View(productDto);
 
         }
+
         [HttpGet]
         public async Task<IActionResult> DeleteProduct(int id)
         {
@@ -158,10 +164,11 @@ namespace MansorySupplyHub.Controllers
             var response = await _productService.DeleteProduct(id);
             if (response.Success)
             {
+                _notyf.Success("Product deleted successfully");
                 return RedirectToAction("Index");
             }
-
-            return View("Error", new ErrorViewModel { Message = response.Message });
+            _notyf.Error("Product deleted successfully");
+            return View();
         }
     }
 }
