@@ -1,6 +1,5 @@
 ﻿using AspNetCoreHero.ToastNotification.Abstractions;
 using MansorySupplyHub.Dto;
-using MansorySupplyHub.Entities;
 using MansorySupplyHub.Implementation.Interface;
 using Microsoft.AspNetCore.Mvc;
 

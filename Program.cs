@@ -19,6 +19,19 @@ builder.Services.AddScoped<IApplicationTypeService, ApplicationTypeService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 
 
+builder.Services.AddSession(Options =>
+{
+    Options.IdleTimeout = TimeSpan.FromMinutes(10);
+    Options.Cookie.HttpOnly = true;
+    Options.Cookie.IsEssential = true;
+});
+builder.Services.AddControllersWithViews();
+
+
+
+
+
+
 
 
 builder.Services.AddNotyf(config =>
@@ -44,6 +57,7 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthorization();
+app.UseSession();
 
 app.MapControllerRoute(
     name: "default",

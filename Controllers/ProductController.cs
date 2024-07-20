@@ -1,8 +1,6 @@
 ﻿using AspNetCoreHero.ToastNotification.Abstractions;
-using Azure.Core;
 using MansorySupplyHub.Dto;
 using MansorySupplyHub.Implementation.Interface;
-using MansorySupplyHub.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MansorySupplyHub.Controllers
