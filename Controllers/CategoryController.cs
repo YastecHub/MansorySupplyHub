@@ -1,4 +1,5 @@
-﻿using MansorySupplyHub.Dto;
+﻿using AspNetCoreHero.ToastNotification.Abstractions;
+using MansorySupplyHub.Dto;
 using MansorySupplyHub.Entities;
 using MansorySupplyHub.Implementation.Interface;
 using Microsoft.AspNetCore.Mvc;
@@ -10,10 +11,12 @@ namespace MansorySupplyHub.Controllers
     public class CategoryController : Controller
     {
         private readonly ICategoryService _categoryService;
+        private readonly INotyfService _notyf;
 
-        public CategoryController(ICategoryService categoryService)
+        public CategoryController(ICategoryService categoryService , INotyfService notyf)
         {
             _categoryService = categoryService;
+            _notyf = notyf;
         }
 
         [HttpGet("categories")]
@@ -49,8 +52,10 @@ namespace MansorySupplyHub.Controllers
             var result = await _categoryService.CreateCategory(request);
             if (result.Success)
             {
+                _notyf.Success("Category Created Successfully");
                 return RedirectToAction("Index");
             }
+            _notyf.Error("Created Successfully");
             return RedirectToAction("CreateCategory");
         }
 
@@ -72,8 +77,10 @@ namespace MansorySupplyHub.Controllers
             var result = await _categoryService.EditCategory(request, id);
             if (result.Success)
             {
+                _notyf.Success("Category editted successfully");
                 return RedirectToAction(nameof(Index));
             }
+            _notyf.Error("Failed to edit category");
             return RedirectToAction("Index");
         }
 
@@ -84,8 +91,10 @@ namespace MansorySupplyHub.Controllers
             var result = await _categoryService.DeleteCategory(id);
             if (result.Success)
             {
+                _notyf.Success("Category deleted successfully");
                 return RedirectToAction(nameof(Index));
             }
+            _notyf.Error("Failed to delete category");
             return RedirectToAction(nameof(Index));
         }
     }

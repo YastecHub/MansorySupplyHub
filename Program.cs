@@ -1,3 +1,4 @@
+using AspNetCoreHero.ToastNotification;
 using MansorySupplyHub.Data;
 using MansorySupplyHub.Implementation.Interface;
 using MansorySupplyHub.Implementation.Services;
@@ -18,6 +19,15 @@ builder.Services.AddScoped<IApplicationTypeService, ApplicationTypeService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 
 
+
+
+builder.Services.AddNotyf(config =>
+{
+    config.DurationInSeconds = 10;
+    config.IsDismissable = true;
+    config.Position = NotyfPosition.TopRight;
+}
+);
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

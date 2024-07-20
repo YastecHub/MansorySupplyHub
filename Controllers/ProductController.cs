@@ -1,4 +1,5 @@
-﻿using Azure.Core;
+﻿using AspNetCoreHero.ToastNotification.Abstractions;
+using Azure.Core;
 using MansorySupplyHub.Dto;
 using MansorySupplyHub.Implementation.Interface;
 using MansorySupplyHub.Models;
@@ -10,11 +11,13 @@ namespace MansorySupplyHub.Controllers
     {
         private readonly IProductService _productService;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly INotyfService _notyf;
 
-        public ProductController(IProductService productService, IWebHostEnvironment webHostEnvironment)
+        public ProductController(IProductService productService, IWebHostEnvironment webHostEnvironment, INotyfService notyf)
         {
             _productService = productService;
             _webHostEnvironment = webHostEnvironment;
+            _notyf = notyf;
         }
 
         public async Task<IActionResult> Index()
@@ -51,8 +54,7 @@ namespace MansorySupplyHub.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpsertProduct(ProductDto productDto)
-        {
-
+        { 
             var files = HttpContext.Request.Form.Files;
             string webRootPath = _webHostEnvironment.WebRootPath;
 
@@ -83,10 +85,11 @@ namespace MansorySupplyHub.Controllers
 
                 if (response.Success)
                 {
+                    _notyf.Success("Product created successfully");
                     return RedirectToAction("Index");
                 }
-
-                ModelState.AddModelError(string.Empty, response.Message);
+                _notyf.Error("Failed to create product");
+                return RedirectToAction("UpsertProduct");
             }
             else
             {
@@ -125,21 +128,23 @@ namespace MansorySupplyHub.Controllers
                     Description = productDto.Description,
                     Price = productDto.Price,
                     Image = productDto.Image,
-                    CategoryId = productDto.CategoryId
+                    CategoryId = productDto.CategoryId, 
+                    ApplicationTypeId = productDto.ApplicationTypeId,
                 };
+                ViewBag.CategorySelectList = await _productService.GetCategorySelectList();
+                ViewBag.ApplicationTypeSelectList = await _productService.GetApplicationTypeSelectList();
 
                 var response = await _productService.EditProduct(updateProductDto, productDto.Id);
 
                 if (response.Success)
                 {
+                    _notyf.Success("Product updated successfully");
                     return RedirectToAction("Index");
                 }
-
-                ModelState.AddModelError(string.Empty, response.Message);
+                _notyf.Success("Failed to update product");
+                return RedirectToAction("UpsertProduct");
             }
-            ViewBag.CategorySelectList = await _productService.GetCategorySelectList();
-            ViewBag.ApplicationTypeSelectList = await _productService.GetApplicationTypeSelectList();
-            return View(productDto);
+              return View(productDto);
 
         }
         [HttpGet]
