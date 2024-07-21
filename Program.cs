@@ -1,8 +1,9 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using AspNetCoreHero.ToastNotification;
 using MansorySupplyHub.Data;
 using MansorySupplyHub.Implementation.Interface;
 using MansorySupplyHub.Implementation.Services;
-using Microsoft.EntityFrameworkCore;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,6 +13,9 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer
                                                      (builder.Configuration.GetConnectionString("Default Connection")));
 
+builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+                .AddDefaultTokenProviders().AddDefaultUI()
+                .AddEntityFrameworkStores<ApplicationDbContext>();
 
 
 builder.Services.AddScoped<ICategoryService, CategoryService>();
@@ -26,12 +30,6 @@ builder.Services.AddSession(Options =>
     Options.Cookie.IsEssential = true;
 });
 builder.Services.AddControllersWithViews();
-
-
-
-
-
-
 
 
 builder.Services.AddNotyf(config =>
@@ -55,7 +53,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-
+app.UseAuthentication();
 app.UseAuthorization();
 app.UseSession();
 

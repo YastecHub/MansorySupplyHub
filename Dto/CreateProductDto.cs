@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace MansorySupplyHub.Dto
 {
-    public class ProductDto
+    public class CreateProductDto
     {
         [Key]
         public int Id { get; set; }

@@ -9,16 +9,4 @@ namespace MansorySupplyHub.Dto
         [Required]
         public string Name { get; set; }
     }
-
-    public class CreateApplicationTypeDto
-    {
-        [Required]
-        public string Name { get; set; } 
-    }
-
-    public class UpdateApplicationTypeDto
-    {
-        [Required]
-        public string Name { get; set; } 
-    }
 }

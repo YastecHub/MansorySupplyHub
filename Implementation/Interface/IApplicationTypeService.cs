@@ -1,8 +1,5 @@
 ﻿using MansorySupplyHub.Dto;
-using MansorySupplyHub.Entities;
 using MansorySupplyHub.Models;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace MansorySupplyHub.Implementation.Interface
 {

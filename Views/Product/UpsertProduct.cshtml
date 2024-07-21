@@ -116,3 +116,24 @@
     </div>
 </form>
 
+
+@section Scripts {
+
+    @{
+        <partial name="_ValidationScriptsPartial" />
+    }
+    <script>
+        function validateInput() {
+            if (document.getElementById("UploadBox").value == "") {
+                Swal.fire(
+                    'Error!',
+                    'Please upload an Image!',
+                    'error'
+                )
+                return false;
+            }
+            return true;
+        }
+    </script>
+}
+

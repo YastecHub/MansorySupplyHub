@@ -23,8 +23,8 @@
                                 <div class="row pl-3">
 
                                     <div class="col-12">
-                                        <span class="badge p-3 border" style="background-color:lavenderblush">@Model.Product.Category.Name</span>
-                                        <span class="badge p-3 border" style="background-color:azure">@Model.Product.ApplicationType.Name</span>
+                                        <span class="badge p-3 border" style="background-color:LightYellow; color: black;;">@Model.Product.Category.Name</span>
+                                        <span class="badge p-3 border" style="background-color: LightSkyBlue; color: black;">@Model.Product.ApplicationType.Name</span>
                                         <h3 class="text-success"></h3>
 
                                         <p class="text-secondary">@Html.Raw(Model.Product.Description) </p>
@@ -49,7 +49,7 @@
                             {
 
 
-                            <button type="submit" asp-route-id="@Model.Product.Id" class="btn btn-info form-control btn-lg" style="height:50px;">Add to Cart</button>
+                                <button type="submit" asp-route-id="@Model.Product.Id" class="btn btn-info form-control btn-lg" style="height:50px;">Add to Cart</button>
                             }
                         </div>
                     </div>

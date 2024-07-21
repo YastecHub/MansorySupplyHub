@@ -31,6 +31,7 @@ namespace MansorySupplyHub.Controllers
             };
             return View(homeViewModel);
         }
+
         public IActionResult Details(int id)
         {
             List<ShoppingCart> shoppingCartList = new List<ShoppingCart>();

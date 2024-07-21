@@ -81,7 +81,6 @@ namespace MansorySupplyHub.Controllers
                     CategoryId = productDto.CategoryId,
                     ApplicationTypeId = productDto.ApplicationTypeId,
                 };
-
                 var response = await _productService.CreateProduct(createProductDto);
 
                 if (response.Success)
@@ -162,7 +161,7 @@ namespace MansorySupplyHub.Controllers
             var response = await _productService.DeleteProduct(id);
             if (response.Success)
             {
-                _notyf.Success("Product deleted successfully");
+                _notyf.Error("Product deleted successfully");
                 return RedirectToAction("Index");
             }
             _notyf.Error("Product deleted successfully");

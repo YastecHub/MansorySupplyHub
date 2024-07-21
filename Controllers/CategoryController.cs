@@ -83,7 +83,6 @@ namespace MansorySupplyHub.Controllers
             return RedirectToAction("Index");
         }
 
-
         [HttpGet("category/delete/{id}")]
         public async Task<IActionResult> DeleteCategory([FromRoute] int id)
         {
