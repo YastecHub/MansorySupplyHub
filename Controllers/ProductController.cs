@@ -151,13 +151,8 @@ namespace MansorySupplyHub.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> DeleteProduct(int id)
+        public async Task<IActionResult> DeleteProduct([FromRoute]int id)
         {
-            if (id == null || id == 0)
-            {
-                return NotFound();
-            }
-
             var response = await _productService.DeleteProduct(id);
             if (response.Success)
             {
