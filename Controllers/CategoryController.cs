@@ -1,10 +1,12 @@
 ﻿using AspNetCoreHero.ToastNotification.Abstractions;
 using MansorySupplyHub.Dto;
 using MansorySupplyHub.Implementation.Interface;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MansorySupplyHub.Controllers
 {
+    [Authorize(Roles = WC.AdminRole)]
     [Route("api/[controller]")]
     [ApiController]
     public class CategoryController : Controller

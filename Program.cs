@@ -5,8 +5,6 @@ using MansorySupplyHub.Data;
 using MansorySupplyHub.Implementation.Interface;
 using MansorySupplyHub.Implementation.Services;
 using MansorySupplyHub.Entities;
-using Microsoft.Extensions.DependencyInjection;
-using MansorySupplyHub;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -57,8 +55,8 @@ using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-    await SeedRolesAsync(roleManager);
-    await SeedAdminUserAsync(userManager, roleManager);
+    //await SeedRolesAsync(roleManager);
+    //await SeedAdminUserAsync(userManager, roleManager);
 }
 
 // Configure the HTTP request pipeline.
@@ -85,47 +83,4 @@ app.MapControllerRoute(
 
 app.Run();
 
-async Task SeedRolesAsync(RoleManager<IdentityRole> roleManager)
-{
-    var roles = new[] { WC.AdminRole, WC.CustomerRole };
-    foreach (var role in roles)
-    {
-        if (!await roleManager.RoleExistsAsync(role))
-        {
-            await roleManager.CreateAsync(new IdentityRole(role));
-        }
-    }
-}
 
-async Task SeedAdminUserAsync(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
-{
-    const string adminEmail = "admin123@gmail.com";
-    const string adminPassword = "Admin@123";
-    const string adminFullName = "Admin User";
-
-    if (await userManager.FindByEmailAsync(adminEmail) == null)
-    {
-        var adminUser = new ApplicationUser
-        {
-            UserName = adminEmail,
-            Email = adminEmail,
-            EmailConfirmed = true,
-            FullName = adminFullName
-        };
-
-        var result = await userManager.CreateAsync(adminUser, adminPassword);
-
-        if (result.Succeeded)
-        {
-            await userManager.AddToRoleAsync(adminUser, WC.AdminRole);
-        }
-        else
-        {
-            // Handle creation errors (log them, throw an exception, etc.)
-            foreach (var error in result.Errors)
-            {
-                Console.WriteLine(error.Description);
-            }
-        }
-    }
-}
