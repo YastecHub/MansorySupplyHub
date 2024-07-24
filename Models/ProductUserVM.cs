@@ -1,4 +1,5 @@
-﻿using MansorySupplyHub.Entities;
+﻿using MansorySupplyHub.Dto;
+using MansorySupplyHub.Entities;
 
 namespace MansorySupplyHub.Models
 {

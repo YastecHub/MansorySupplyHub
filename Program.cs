@@ -33,6 +33,8 @@ builder.Services.ConfigureApplicationCookie(options =>
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IApplicationTypeService, ApplicationTypeService>();
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<ICartService, CartService>();
+
 
 builder.Services.AddSession(options =>
 {

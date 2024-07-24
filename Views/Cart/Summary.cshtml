@@ -1,4 +1,4 @@
-﻿@model MansorySupplyHub.Models.ProductUserVM
+﻿@model MansorySupplyHub.Dto.ProductUserDto
 
 <form method="post">
     <br />
@@ -36,10 +36,10 @@
                                     <div class="col-3">
                                         <label>Phone</label>
                                     </div>
-                                    <div class="col-9">
+                                   @*  <div class="col-9">
                                         <input asp-for="ApplicationUser.PhoneNumber" type="text" class="form-control" />
                                         <span asp-validation-for="ApplicationUser.PhoneNumber" class="text-danger"></span>
-                                    </div>
+                                    </div> *@
                                 </div>
                                 <div class="row my-1">
                                     <div class="col-3">
@@ -75,10 +75,10 @@
                     </div>
                 </div>
                 <div class="card-footer">
-                    <div class="row">
-                        <div class="col-12 col-md-5 offset-md-7">
-                            <button type="submit" class="btn btn-primary form-control">Submit Inquiry</button>
-                        </div>
+                    <div class="col-12 col-md-5 offset-md-7"> 
+                        <a asp-action="InquiryConfirmation" class="btn btn-primary form-control">
+                            <span>Submit Inquiry</span>
+                        </a> 
                     </div>
                 </div>
             </div>

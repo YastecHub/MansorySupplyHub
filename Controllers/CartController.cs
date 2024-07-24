@@ -1,103 +1,108 @@
-﻿using MansorySupplyHub.Data;
+﻿using AspNetCoreHero.ToastNotification.Abstractions;
+using MansorySupplyHub.Dto;
 using MansorySupplyHub.Entities;
-using MansorySupplyHub.Models;
+using MansorySupplyHub.Implementation.Interface;
 using MansorySupplyHub.Utility;
-using Microsoft.AspNetCore.Authorization; 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
 namespace MansorySupplyHub.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = WC.AdminRole)]
+    [Route("api/[controller]")]
+    [ApiController]
     public class CartController : Controller
     {
-        private readonly ApplicationDbContext _applicationDbContext;
-        [BindProperty]
-        public ProductUserVM ProductUserVM { get; set; }
-        public CartController(ApplicationDbContext applicationDbContext)
+        private readonly ICartService _cartService;
+        private readonly INotyfService _notyf;
+
+        public CartController(ICartService cartService, INotyfService notyf)
         {
-            _applicationDbContext = applicationDbContext;
+            _cartService = cartService;
+            _notyf = notyf;
         }
-        public IActionResult Index()
+
+        [HttpGet("cart-items")]
+        public async Task<IActionResult> Index()
         {
-            List<ShoppingCart> shoppingCartList = new List<ShoppingCart>();
-            if (HttpContext.Session.Get<IEnumerable<ShoppingCart>>(WC.SessionCart) != null && HttpContext.Session.Get<IEnumerable<ShoppingCart>>(WC.SessionCart).Count() > 0)
+            var shoppingCartSession = HttpContext.Session.Get<IEnumerable<ShoppingCart>>(WC.SessionCart);
+            var shoppingCartList = shoppingCartSession?.ToList() ?? new List<ShoppingCart>();
+            var productIds = shoppingCartList.Select(i => i.ProductId).ToList();
+
+            var result = await _cartService.GetProductsInCart(productIds);
+            if (result.Success)
             {
-                //session exist
-                shoppingCartList = HttpContext.Session.Get<List<ShoppingCart>>(WC.SessionCart);
+                return View(result.Data);
             }
-            List<int> prodInCart = shoppingCartList.Select(i => i.ProductId).ToList();
-            IEnumerable<Product> prodList = _applicationDbContext.Products.Where(u => prodInCart.Contains(u.Id));
-            return View(prodList);
 
+            _notyf.Error("Failed to load cart items.");
+            return View(new List<ProductDto>());
         }
 
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [ActionName("index")]
-        public IActionResult IndexPost()
-        {
-            return RedirectToAction(nameof(Summary));
-        }
-
-
-        public IActionResult Summary()
+        [HttpGet("cart-summary")]
+        public async Task<IActionResult> Summary()
         {
             var claimsIdentity = (ClaimsIdentity)User.Identity;
             var claim = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier);
+            var userId = claim?.Value;
 
-            List<ShoppingCart> shoppingCartList = new List<ShoppingCart>();
-            if (HttpContext.Session.Get<IEnumerable<ShoppingCart>>(WC.SessionCart) != null && HttpContext.Session.Get<IEnumerable<ShoppingCart>>(WC.SessionCart).Count() > 0)
+            var shoppingCartSession = HttpContext.Session.Get<IEnumerable<ShoppingCart>>(WC.SessionCart);
+            var shoppingCartList = shoppingCartSession?.ToList() ?? new List<ShoppingCart>();
+            var productIds = shoppingCartList.Select(i => i.ProductId).ToList();
+
+            var result = await _cartService.GetUserCartDetails(userId, productIds);
+            if (result.Success)
             {
-                //session exist
-                shoppingCartList = HttpContext.Session.Get<List<ShoppingCart>>(WC.SessionCart);
+                return View(result.Data);
             }
-            List<int> prodInCart = shoppingCartList.Select(i => i.ProductId).ToList();
-            IEnumerable<Product> prodList = _applicationDbContext.Products.Where(u => prodInCart.Contains(u.Id));
 
-            ProductUserVM = new ProductUserVM()
-            {
-                ApplicationUser = _applicationDbContext.ApplicationUser.FirstOrDefault(u => u.Id == claim.Value), 
-
-                ProductList = prodList.ToList(),
-            }; 
-            return View(ProductUserVM);
-
+            _notyf.Error("Failed to load cart summary.");
+            return RedirectToAction("Index");
         }
 
-
-        [HttpPost]
+        [HttpPost("cart-summary")]
         [ValidateAntiForgeryToken]
-        [ActionName("Summary")]
-        public IActionResult SummaryPost(ProductUserVM productUserVM)
+        public async Task<IActionResult> SummaryPost(ProductUserDto productUserDto)
         {
+           
+            _notyf.Success("Cart summary processed successfully.");
             return RedirectToAction(nameof(InquiryConfirmation));
         }
 
-        public IActionResult InquiryConfirmation()
+        [HttpGet("cart-confirmation")]
+        public async Task<IActionResult> InquiryConfirmation()
         {
-            HttpContext.Session.Clear();
+            var result = await _cartService.ClearCart();
+            if (result.Success)
+            {
+                _notyf.Success("Inquiry Submitted successfully.");
+            }
+            else
+            {
+                _notyf.Error("Inquiry failed to submit.");
+            }
+
             return View();
         }
 
-
-        public IActionResult Remove(int id)
+        [HttpGet("remove-item/{id}")]
+        public async Task<IActionResult> Remove(int id)
         {
-            List<ShoppingCart> shoppingCartList = new List<ShoppingCart>();
-            if (HttpContext.Session.Get<IEnumerable<ShoppingCart>>(WC.SessionCart) != null && HttpContext.Session.Get<IEnumerable<ShoppingCart>>(WC.SessionCart).Count() > 0)
+            var shoppingCartSession = HttpContext.Session.Get<IEnumerable<ShoppingCart>>(WC.SessionCart);
+            var shoppingCartList = shoppingCartSession?.ToList() ?? new List<ShoppingCart>();
+
+            var result = await _cartService.RemoveProductFromCart(id, shoppingCartList);
+            if (result.Success)
             {
-                //session exist
-                shoppingCartList = HttpContext.Session.Get<List<ShoppingCart>>(WC.SessionCart);
+                HttpContext.Session.Set(WC.SessionCart, shoppingCartList);
+                _notyf.Success("Product removed from cart.");
+            }
+            else
+            {
+                _notyf.Error("Failed to remove product from cart.");
             }
 
-
-            shoppingCartList.Remove(shoppingCartList.FirstOrDefault(u => u.ProductId == id));
-            HttpContext.Session.Set(WC.SessionCart, shoppingCartList);
-
-
-            List<int> prodInCart = shoppingCartList.Select(i => i.ProductId).ToList();
-            IEnumerable<Product> prodList = _applicationDbContext.Products.Where(u => prodInCart.Contains(u.Id));
             return RedirectToAction(nameof(Index));
         }
     }

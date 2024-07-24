@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using MansorySupplyHub.Dto;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MansorySupplyHub.Entities
@@ -13,5 +14,7 @@ namespace MansorySupplyHub.Entities
         public Category Category { get; set; }
         public int ApplicationTypeId { get; set; }
         public ApplicationType ApplicationType { get; set; }
+
+       
     }
 }
