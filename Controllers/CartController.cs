@@ -16,11 +16,13 @@ namespace MansorySupplyHub.Controllers
     {
         private readonly ICartService _cartService;
         private readonly INotyfService _notyf;
+        private readonly IEmailService _emailService;
 
-        public CartController(ICartService cartService, INotyfService notyf)
+        public CartController(ICartService cartService, INotyfService notyf ,IEmailService emailService)
         {
             _cartService = cartService;
             _notyf = notyf;
+            _emailService = emailService;
         }
 
         [HttpGet("cart-items")]
@@ -105,5 +107,6 @@ namespace MansorySupplyHub.Controllers
 
             return RedirectToAction(nameof(Index));
         }
+
     }
 }

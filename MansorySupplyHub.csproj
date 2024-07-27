@@ -17,8 +17,6 @@
     <Compile Remove="Controllers\ApplicationTypeController.cs" />
     <Compile Remove="Dto\MailRequests.cs" />
     <Compile Remove="Entities\EmailConfiguration.cs" />
-    <Compile Remove="Implementation\Interface\IEmailService.cs" />
-    <Compile Remove="Implementation\Services\EmailService.cs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -5,6 +5,9 @@ using MansorySupplyHub.Data;
 using MansorySupplyHub.Implementation.Interface;
 using MansorySupplyHub.Implementation.Services;
 using MansorySupplyHub.Entities;
+using MansorySupplyHub.Extensions;
+using System.Configuration;
+using MansorySupplyHub.Dto;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +18,9 @@ builder.Services.AddRazorPages(options =>
     options.Conventions.AuthorizeAreaPage("Identity", "/Account/Logout");
 });
 
+builder.Services.AddFluentEmail(builder.Configuration);
+
+builder.Services.Configure<SMTPConfig>(builder.Configuration.GetSection("SMTPConfig"));
 builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer
     (builder.Configuration.GetConnectionString("Default Connection")));
@@ -36,6 +42,7 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IInquiryDetailService, InquiryDetailService>();
 builder.Services.AddScoped<IInquiryHeaderService, InquiryHeaderService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 
 builder.Services.AddSession(options =>
