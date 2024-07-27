@@ -1,35 +1,32 @@
+using System.Diagnostics;
 using MansorySupplyHub.Data;
 using MansorySupplyHub.Entities;
 using MansorySupplyHub.Models;
-using MansorySupplyHub.Utility;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Diagnostics;
+using MansorySupplyHub.Utility;
 
 namespace MansorySupplyHub.Controllers
 {
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-        private readonly ApplicationDbContext _applicationDbContext;
-        private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly ApplicationDbContext _db;
 
-        public HomeController(ILogger<HomeController> logger, ApplicationDbContext applicationDbContext , IWebHostEnvironment webHostEnvironment)
+        public HomeController(ILogger<HomeController> logger, ApplicationDbContext db)
         {
             _logger = logger;
-            _applicationDbContext = applicationDbContext;
-            _webHostEnvironment = webHostEnvironment;
+            _db = db;
         }
 
         public IActionResult Index()
         {
-            HomeViewModel homeViewModel = new HomeViewModel()
+            HomeViewModel homeVM = new HomeViewModel()
             {
-                Products = _applicationDbContext.Products
-                    .Include(u => u.ApplicationType),
-                Categories = _applicationDbContext.Categories
+                Products = _db.Products.Include(u => u.Category).Include(u => u.ApplicationType),
+                Categories = _db.Categories
             };
-            return View(homeViewModel);
+            return View(homeVM);
         }
 
         public IActionResult Details(int id)
@@ -45,9 +42,7 @@ namespace MansorySupplyHub.Controllers
 
             DetailsViewModel DetailsViewModel = new DetailsViewModel()
             {
-                Product = _applicationDbContext.Products
-                .Include(u => u.Category)
-                .Include(u => u.ApplicationType)
+                Product = _db.Products.Include(u => u.Category).Include(u => u.ApplicationType)
                 .Where(u => u.Id == id).FirstOrDefault(),
                 ExistsInCart = false
             };

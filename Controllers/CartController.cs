@@ -9,7 +9,7 @@ using System.Security.Claims;
 
 namespace MansorySupplyHub.Controllers
 {
-    [Authorize(Roles = WC.AdminRole)]
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class CartController : Controller

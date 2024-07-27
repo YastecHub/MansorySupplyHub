@@ -30,23 +30,4 @@ namespace MansorySupplyHub.Dto
         [ForeignKey("ApplicationTypeId")]
         public virtual ApplicationType ApplicationType { get; set; }
     }
-
-    public class ProductUserDto
-    {
-        public ApplicationUserDto ApplicationUser { get; set; }
-        public IList<ProductDto> ProductList { get; set; }
-      
-        public ProductUserDto()
-        {
-            ProductList = new List<ProductDto>();
-        }
-    }
-
-    public class ApplicationUserDto
-    {
-        public string Id { get; set; }
-        public string FullName { get; set; }
-        public string Email { get; set; }
-       
-    }
 }

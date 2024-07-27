@@ -5,9 +5,6 @@ using MansorySupplyHub.Implementation.Interface;
 using MansorySupplyHub.Models;
 using MansorySupplyHub.Utility;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace MansorySupplyHub.Implementation.Services
 {
@@ -54,6 +51,7 @@ namespace MansorySupplyHub.Implementation.Services
                     Id = user.Id,
                     FullName = user.FullName,
                     Email = user.Email,
+                    PhoneNumber = user.PhoneNumber
                 },
                 ProductList = products.Data
             };
@@ -66,7 +64,7 @@ namespace MansorySupplyHub.Implementation.Services
             };
         }
 
-        public Task<ResponseModel<bool>> ClearCart() 
+        public async Task<ResponseModel<bool>> ClearCart() 
         {
             var httpContext = _httpContextAccessor.HttpContext;
             if (httpContext == null)

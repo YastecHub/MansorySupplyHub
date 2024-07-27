@@ -34,6 +34,8 @@ builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IApplicationTypeService, ApplicationTypeService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IInquiryDetailService, InquiryDetailService>();
+builder.Services.AddScoped<IInquiryHeaderService, InquiryHeaderService>();
 
 
 builder.Services.AddSession(options =>

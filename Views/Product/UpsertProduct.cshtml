@@ -8,13 +8,13 @@
     {
         <input asp-for="Id" hidden />
     }
-    <div class="border p-3">
+    <div class="border p-3 bg-white">
         <div class="form-group row">
             <h2 class="text-info pl-3">@title</h2>
         </div>
         <div class="row">
             <div class="col-8">
-                <div class="form-group row">
+                <div class="form-group row py-2">
                     <div class="col-4">
                         <label asp-for="Name"></label>
                     </div>
@@ -26,7 +26,7 @@
 
                 <br />
 
-                <div class="form-group row">
+                <div class="form-group row py-2">
                     <div class="col-4">
                         <label asp-for="Price"></label>
                     </div>
@@ -38,7 +38,7 @@
 
                 <br />
 
-                <div class="form-group row">
+                <div class="form-group row py-2">
                     <div class="col-4">
                         <label asp-for="Description"></label>
                     </div>
@@ -50,7 +50,7 @@
 
                 <br />
 
-                <div class="form-group row">
+                <div class="form-group row py-2">
                     <div class="col-4">Image</div>
                     <div class="col-8">
                         <input type="file" name="file" id="UploadBox" multiple class="form-control" />
@@ -59,10 +59,10 @@
 
                 <br />
 
-                <div class="form-group row">
+                <div class="form-group row py-2">
                     <div class="col-4">Category Type</div>
                     <div class="col-8">
-                        <select asp-for="CategoryId" asp-items="@(ViewBag.CategorySelectList as IEnumerable<SelectListItem>)" class="form-control">
+                        <select asp-for="CategoryId" asp-items="@(ViewBag.CategorySelectList as IEnumerable<SelectListItem>)" class="form-select">
                             <option disabled selected>--Select Category--</option>
                         </select>
                         <span asp-validation-for="CategoryId" class="text-danger"></span>
@@ -72,10 +72,10 @@
 
                 <br />
 
-                <div class="form-group row">
+                <div class="form-group row py-2">
                     <div class="col-4">ApplicationType</div>
                     <div class="col-8">
-                        <select asp-for="ApplicationTypeId" asp-items="@(ViewBag.ApplicationTypeSelectList as IEnumerable<SelectListItem>)" class="form-control">
+                        <select asp-for="ApplicationTypeId" asp-items="@(ViewBag.ApplicationTypeSelectList as IEnumerable<SelectListItem>)" class="form-select">
                             <option disabled selected>--Select ApplicationType--</option>
                         </select>
                         <span asp-validation-for="ApplicationTypeId" class="text-danger"></span>
@@ -84,7 +84,7 @@
 
                 <br />
 
-                <div class="form-group row">
+                <div class="form-group row py-2">
                     <div class="col-8 offset-4 row">
                         <div class="col">
                             @if (Model.Id != 0)
