@@ -6,9 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MansorySupplyHub.Controllers
 {
-    [Authorize(Roles = WC.AdminRole)]
-    [Route("api/[controller]")]
-    [ApiController]
+    [Authorize(Roles = WC.AdminRole)] 
     public class CategoryController : Controller
     {
         private readonly ICategoryService _categoryService;

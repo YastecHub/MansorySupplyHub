@@ -1,12 +1,11 @@
 ﻿@page
-@using MansorySupplyHub.Areas.Identity.Pages.Account
 @model RegisterModel
 
 @if (User.IsInRole(MansorySupplyHub.WC.AdminRole))
 {
     <h1>Register an Admin Account</h1>
 }
-else 
+else
 {
     <h1>Register</h1>
 }
@@ -41,8 +40,7 @@ else
                 <label asp-for="Input.ConfirmPassword"></label>
                 <input asp-for="Input.ConfirmPassword" class="form-control" />
                 <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
-            </div> 
-            <br />
+            </div>
             @if (User.IsInRole(MansorySupplyHub.WC.AdminRole))
             {
                 <button type="submit" class="btn btn-warning">Register Admin User</button>

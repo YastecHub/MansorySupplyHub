@@ -6,10 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MansorySupplyHub.Controllers
 {
-    [Authorize(Roles =WC.AdminRole)]
-
-    [Route("api/[controller]")]
-    [ApiController]
+    [Authorize(Roles =WC.AdminRole)] 
     public class ApplicationTypeController : Controller
     {
         private readonly IApplicationTypeService _applicationTypeService;

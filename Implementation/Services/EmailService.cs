@@ -1,24 +1,41 @@
-﻿using FluentEmail.Core;
+﻿using System.Threading.Tasks;
 using MansorySupplyHub.Entities;
 using MansorySupplyHub.Implementation.Interface;
+using FluentEmail.Core;
+using FluentEmail.Smtp;
 
 namespace MansorySupplyHub.Implementation.Services
 {
     public class EmailService : IEmailService
     {
         private readonly IFluentEmail _fluentEmail;
+
         public EmailService(IFluentEmail fluentEmail)
         {
-            _fluentEmail = fluentEmail
-                ?? throw new ArgumentNullException(nameof(fluentEmail));
+            _fluentEmail = fluentEmail;
         }
+
         public async Task Send(EmailMetadata emailMetadata)
         {
-            await _fluentEmail.To(emailMetadata.ToAddress)
+            try
+            {
+                var email = _fluentEmail
+                .To(emailMetadata.ToAddress)
                 .Subject(emailMetadata.Subject)
-                .Body(emailMetadata.Body)
-                .SendAsync();
+                .Body(emailMetadata.Body, false); // true for HTML body
+
+                if (!string.IsNullOrEmpty(emailMetadata.AttachmentPath))
+                {
+                    email.AttachFromFilename(emailMetadata.AttachmentPath);
+                }
+
+                await email.SendAsync();
+            }
+            catch (Exception ex)
+            {
+
+                Console.WriteLine(ex.Message);
+            }
         }
     }
 }
-

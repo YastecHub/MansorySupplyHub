@@ -10,8 +10,6 @@ using System.Security.Claims;
 namespace MansorySupplyHub.Controllers
 {
     [Authorize]
-    [Route("api/[controller]")]
-    [ApiController]
     public class CartController : Controller
     {
         private readonly ICartService _cartService;
@@ -79,6 +77,15 @@ namespace MansorySupplyHub.Controllers
             if (result.Success)
             {
                 _notyf.Success("Inquiry Submitted successfully.");
+
+                // Send email confirmation
+                EmailMetadata emailMetadata = new EmailMetadata(
+                    "yasiroyebo@gmail.com", 
+                    "Inquiry Confirmation",
+                    "Your inquiry has been successfully submitted. Thank you for your interest!"
+                );
+
+                await _emailService.Send(emailMetadata);
             }
             else
             {
@@ -87,6 +94,7 @@ namespace MansorySupplyHub.Controllers
 
             return View();
         }
+
 
         [HttpGet("remove-item/{id}")]
         public async Task<IActionResult> Remove(int id)
