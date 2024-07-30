@@ -16,7 +16,7 @@ namespace MansorySupplyHub.Controllers
         private readonly INotyfService _notyf;
         private readonly IEmailService _emailService;
 
-        public CartController(ICartService cartService, INotyfService notyf ,IEmailService emailService)
+        public CartController(ICartService cartService, INotyfService notyf, IEmailService emailService)
         {
             _cartService = cartService;
             _notyf = notyf;
@@ -51,6 +51,12 @@ namespace MansorySupplyHub.Controllers
             var shoppingCartList = shoppingCartSession?.ToList() ?? new List<ShoppingCart>();
             var productIds = shoppingCartList.Select(i => i.ProductId).ToList();
 
+            if (!shoppingCartList.Any())
+            {
+                _notyf.Warning("Your cart is empty.");
+                return RedirectToAction("Index");
+            }
+
             var result = await _cartService.GetUserCartDetails(userId, productIds);
             if (result.Success)
             {
@@ -65,7 +71,8 @@ namespace MansorySupplyHub.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SummaryPost(ProductUserDto productUserDto)
         {
-           
+            // Process cart summary here...
+
             _notyf.Success("Cart summary processed successfully.");
             return RedirectToAction(nameof(InquiryConfirmation));
         }
@@ -76,25 +83,32 @@ namespace MansorySupplyHub.Controllers
             var result = await _cartService.ClearCart();
             if (result.Success)
             {
-                _notyf.Success("Inquiry Submitted successfully.");
+                _notyf.Success("Inquiry submitted successfully. Your cart has been cleared.");
 
                 // Send email confirmation
                 EmailMetadata emailMetadata = new EmailMetadata(
-                    "yasiroyebo@gmail.com", 
+                    "user@example.com",
                     "Inquiry Confirmation",
                     "Your inquiry has been successfully submitted. Thank you for your interest!"
                 );
 
-                await _emailService.Send(emailMetadata);
+                ////var emailResult = await _emailService.Send(emailMetadata);
+                //if (emailResult.Success)
+                //{
+                //    _notyf.Success("Confirmation email sent successfully.");
+                //}
+                //else
+                //{
+                //    _notyf.Error("Failed to send confirmation email.");
+                //}
             }
             else
             {
-                _notyf.Error("Inquiry failed to submit.");
+                _notyf.Error("Failed to submit inquiry.");
             }
 
             return View();
         }
-
 
         [HttpGet("remove-item/{id}")]
         public async Task<IActionResult> Remove(int id)
@@ -115,6 +129,5 @@ namespace MansorySupplyHub.Controllers
 
             return RedirectToAction(nameof(Index));
         }
-
     }
 }

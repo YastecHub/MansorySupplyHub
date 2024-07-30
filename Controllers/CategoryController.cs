@@ -6,13 +6,13 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MansorySupplyHub.Controllers
 {
-    [Authorize(Roles = WC.AdminRole)] 
+    [Authorize(Roles = WC.AdminRole)]
     public class CategoryController : Controller
     {
         private readonly ICategoryService _categoryService;
         private readonly INotyfService _notyf;
 
-        public CategoryController(ICategoryService categoryService , INotyfService notyf)
+        public CategoryController(ICategoryService categoryService, INotyfService notyf)
         {
             _categoryService = categoryService;
             _notyf = notyf;
@@ -21,29 +21,31 @@ namespace MansorySupplyHub.Controllers
         [HttpGet("categories")]
         public async Task<IActionResult> Index()
         {
-            var category = await _categoryService.GetAllCategories();
-            if (category.Success)
+            var result = await _categoryService.GetAllCategories();
+            if (result.Success)
             {
-                return View(category.Data);
+                return View(result.Data);
             }
 
+            _notyf.Error("Failed to load categories.");
             return View();
         }
 
         [HttpGet("category/{id}")]
         public async Task<IActionResult> Category(int id)
         {
-            var category = await _categoryService.GetCategoryDetails(id);
-            if (category.Success)
+            var result = await _categoryService.GetCategoryDetails(id);
+            if (result.Success)
             {
-                return View(category.Data);
+                return View(result.Data);
             }
+
+            _notyf.Error("Category not found.");
             return RedirectToAction("Index");
         }
 
         [HttpGet("create-category")]
-        public IActionResult CreateCategory() =>
-             View();
+        public IActionResult CreateCategory() => View();
 
         [HttpPost("create-category")]
         public async Task<IActionResult> CreateCategory([FromForm] CreateCategoryDto request)
@@ -51,21 +53,24 @@ namespace MansorySupplyHub.Controllers
             var result = await _categoryService.CreateCategory(request);
             if (result.Success)
             {
-                _notyf.Success("Category Created Successfully");
+                _notyf.Success("Category created successfully.");
                 return RedirectToAction("Index");
             }
-            _notyf.Error("Created Successfully");
+
+            _notyf.Error("Failed to create category.");
             return RedirectToAction("CreateCategory");
         }
 
         [HttpGet("category/edit/{id}")]
         public async Task<IActionResult> EditCategory(int id)
         {
-            var response = await _categoryService.GetCategoryDetails(id);
-            if (response.Success)
+            var result = await _categoryService.GetCategoryDetails(id);
+            if (result.Success)
             {
-                return View(response.Data);
+                return View(result.Data);
             }
+
+            _notyf.Error("Category not found.");
             return RedirectToAction("Index");
         }
 
@@ -76,11 +81,12 @@ namespace MansorySupplyHub.Controllers
             var result = await _categoryService.EditCategory(request, id);
             if (result.Success)
             {
-                _notyf.Success("Category editted successfully");
+                _notyf.Success("Category edited successfully.");
                 return RedirectToAction(nameof(Index));
             }
-            _notyf.Error("Failed to edit category");
-            return RedirectToAction("Index");
+
+            _notyf.Error("Failed to edit category.");
+            return RedirectToAction(nameof(Index));
         }
 
         [HttpGet("category/delete/{id}")]
@@ -89,10 +95,11 @@ namespace MansorySupplyHub.Controllers
             var result = await _categoryService.DeleteCategory(id);
             if (result.Success)
             {
-                _notyf.Success("Category deleted successfully");
+                _notyf.Success("Category deleted successfully.");
                 return RedirectToAction(nameof(Index));
             }
-            _notyf.Error("Failed to delete category");
+
+            _notyf.Error("Failed to delete category.");
             return RedirectToAction(nameof(Index));
         }
     }

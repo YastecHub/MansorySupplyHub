@@ -21,92 +21,159 @@ namespace MansorySupplyHub.Implementation.Services
 
         public async Task<ResponseModel<List<ProductDto>>> GetProductsInCart(List<int> productIds)
         {
-            var products = await _dbContext.Products.Where(p => productIds.Contains(p.Id)).ToListAsync();
-            var productDtos = products.Select(p => new ProductDto
+            try
             {
-                Id = p.Id,
-                Name = p.Name,
-                Price = p.Price,
-                Image = p.Image,
-                Description = p.Description,
-            }).ToList();
+                var products = await _dbContext.Products.Where(p => productIds.Contains(p.Id)).ToListAsync();
+                var productDtos = products.Select(p => new ProductDto
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Price = p.Price,
+                    Image = p.Image,
+                    Description = p.Description,
+                }).ToList();
 
-            return new ResponseModel<List<ProductDto>>
+                return new ResponseModel<List<ProductDto>>
+                {
+                    Data = productDtos,
+                    Success = true,
+                    Message = "Products retrieved successfully."
+                };
+            }
+            catch (Exception ex)
             {
-                Data = productDtos,
-                Success = true,
-                Message = "Products retrieved successfully."
-            };
+                return new ResponseModel<List<ProductDto>>
+                {
+                    Data = null,
+                    Success = false,
+                    Message = "An error occurred while retrieving products in the cart."
+                };
+            }
         }
 
         public async Task<ResponseModel<ProductUserDto>> GetUserCartDetails(string userId, List<int> productIds)
         {
-            var user = await _dbContext.ApplicationUser.FirstOrDefaultAsync(u => u.Id == userId);
-            var products = await GetProductsInCart(productIds);
-
-            var userCartDetails = new ProductUserDto
+            try
             {
-                ApplicationUser = new ApplicationUserDto
+                var user = await _dbContext.ApplicationUser.FirstOrDefaultAsync(u => u.Id == userId);
+                if (user == null)
                 {
-                    Id = user.Id,
-                    FullName = user.FullName,
-                    Email = user.Email,
-                    PhoneNumber = user.PhoneNumber
-                },
-                ProductList = products.Data
-            };
+                    return new ResponseModel<ProductUserDto>
+                    {
+                        Data = null,
+                        Success = false,
+                        Message = "User not found."
+                    };
+                }
 
-            return new ResponseModel<ProductUserDto>
+                var productsResponse = await GetProductsInCart(productIds);
+                if (!productsResponse.Success)
+                {
+                    return new ResponseModel<ProductUserDto>
+                    {
+                        Data = null,
+                        Success = false,
+                        Message = productsResponse.Message
+                    };
+                }
+
+                var userCartDetails = new ProductUserDto
+                {
+                    ApplicationUser = new ApplicationUserDto
+                    {
+                        Id = user.Id,
+                        FullName = user.FullName,
+                        Email = user.Email,
+                        PhoneNumber = user.PhoneNumber
+                    },
+                    ProductList = productsResponse.Data
+                };
+
+                return new ResponseModel<ProductUserDto>
+                {
+                    Data = userCartDetails,
+                    Success = true,
+                    Message = "User and cart details retrieved successfully."
+                };
+            }
+            catch (Exception ex)
             {
-                Data = userCartDetails,
-                Success = true,
-                Message = "User and cart details retrieved successfully."
-            };
+                return new ResponseModel<ProductUserDto>
+                {
+                    Data = null,
+                    Success = false,
+                    Message = "An error occurred while retrieving user cart details."
+                };
+            }
         }
 
-        public async Task<ResponseModel<bool>> ClearCart() 
+        public async Task<ResponseModel<bool>> ClearCart()
         {
-            var httpContext = _httpContextAccessor.HttpContext;
-            if (httpContext == null)
+            try
+            {
+                var httpContext = _httpContextAccessor.HttpContext;
+                if (httpContext == null)
+                {
+                    return new ResponseModel<bool>
+                    {
+                        Data = false,
+                        Success = false,
+                        Message = "HttpContext is null."
+                    };
+                }
+
+                httpContext.Session.Set(WC.SessionCart, new List<ShoppingCart>());
+
+                return new ResponseModel<bool>
+                {
+                    Data = true,
+                    Success = true,
+                    Message = "Cart cleared successfully."
+                };
+            }
+            catch (Exception ex)
             {
                 return new ResponseModel<bool>
                 {
                     Data = false,
                     Success = false,
-                    Message = "HttpContext is null."
+                    Message = "An error occurred while clearing the cart."
                 };
             }
-
-            httpContext.Session.Set(WC.SessionCart, new List<ShoppingCart>());
-
-            return new ResponseModel<bool>
-            {
-                Data = true,
-                Success = true,
-                Message = "Cart cleared successfully."
-            };
         }
 
         public async Task<ResponseModel<bool>> RemoveProductFromCart(int productId, List<ShoppingCart> shoppingCartList)
         {
-            var productToRemove = shoppingCartList.FirstOrDefault(c => c.ProductId == productId);
-            if (productToRemove != null)
+            try
             {
-                shoppingCartList.Remove(productToRemove);
+                var productToRemove = shoppingCartList.FirstOrDefault(c => c.ProductId == productId);
+                if (productToRemove != null)
+                {
+                    shoppingCartList.Remove(productToRemove);
+                    return new ResponseModel<bool>
+                    {
+                        Data = true,
+                        Success = true,
+                        Message = "Product removed from cart."
+                    };
+                }
+
                 return new ResponseModel<bool>
                 {
-                    Data = true,
-                    Success = true,
-                    Message = "Product removed from cart."
+                    Data = false,
+                    Success = false,
+                    Message = "Product not found in cart."
                 };
             }
-
-            return new ResponseModel<bool>
+            catch (Exception ex)
             {
-                Data = false,
-                Success = false,
-                Message = "Product not found in cart."
-            };
+                return new ResponseModel<bool>
+                {
+                    Data = false,
+                    Success = false,
+                    Message = "An error occurred while removing the product from the cart."
+                };
+            }
         }
     }
 }

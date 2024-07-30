@@ -3,6 +3,12 @@ using MansorySupplyHub.Dto;
 using MansorySupplyHub.Implementation.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
+using MansorySupplyHub.Utility;
 
 namespace MansorySupplyHub.Controllers
 {
@@ -46,31 +52,36 @@ namespace MansorySupplyHub.Controllers
                 var response = await _productService.GetProductDetails(id.Value);
                 if (!response.Success)
                 {
+                    _notyf.Error("Product not found");
                     return NotFound();
                 }
                 return View(response.Data);
             }
         }
+
         // POST-UPSERT
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpsertProduct(ProductDto productDto)
-        { 
+        {
             var files = HttpContext.Request.Form.Files;
             string webRootPath = _webHostEnvironment.WebRootPath;
 
             if (productDto.Id == 0)
             {
-                //creating
-                string upload = webRootPath + WC.ImagePath;
-                string fileName = Guid.NewGuid().ToString();
-                string extension = Path.GetExtension(files[0].FileName);
-
-                using (var fileStreams = new FileStream(Path.Combine(upload, fileName + extension), FileMode.Create))
+                // Creating
+                if (files.Count > 0)
                 {
-                    files[0].CopyTo(fileStreams);
+                    string upload = webRootPath + WC.ImagePath;
+                    string fileName = Guid.NewGuid().ToString();
+                    string extension = Path.GetExtension(files[0].FileName);
+
+                    using (var fileStreams = new FileStream(Path.Combine(upload, fileName + extension), FileMode.Create))
+                    {
+                        await files[0].CopyToAsync(fileStreams);
+                    }
+                    productDto.Image = fileName + extension;
                 }
-                productDto.Image = fileName + extension;
 
                 var createProductDto = new CreateProductDto
                 {
@@ -113,7 +124,7 @@ namespace MansorySupplyHub.Controllers
 
                     using (var fileStream = new FileStream(Path.Combine(upload, fileName + extension), FileMode.Create))
                     {
-                        files[0].CopyTo(fileStream);
+                        await files[0].CopyToAsync(fileStream);
                     }
 
                     productDto.Image = fileName + extension;
@@ -131,8 +142,8 @@ namespace MansorySupplyHub.Controllers
                     Price = productDto.Price,
                     Image = productDto.Image,
                     Category = productDto.Category,
-                     ApplicationType = productDto.ApplicationType,
-                    CategoryId = productDto.CategoryId, 
+                    ApplicationType = productDto.ApplicationType,
+                    CategoryId = productDto.CategoryId,
                     ApplicationTypeId = productDto.ApplicationTypeId,
                 };
                 ViewBag.CategorySelectList = await _productService.GetCategorySelectList();
@@ -148,20 +159,18 @@ namespace MansorySupplyHub.Controllers
                 _notyf.Error("Failed to update product");
                 return RedirectToAction("UpsertProduct");
             }
-              return View(productDto);
-
         }
 
         [HttpGet]
-        public async Task<IActionResult> DeleteProduct([FromRoute]int id)
+        public async Task<IActionResult> DeleteProduct([FromRoute] int id)
         {
             var response = await _productService.DeleteProduct(id);
             if (response.Success)
             {
-                _notyf.Error("Product deleted successfully");
+                _notyf.Success("Product deleted successfully");
                 return RedirectToAction("Index");
             }
-            _notyf.Error("Product deleted successfully");
+            _notyf.Error("Failed to delete product");
             return View();
         }
     }

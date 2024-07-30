@@ -6,14 +6,14 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MansorySupplyHub.Controllers
 {
-    [Authorize(Roles =WC.AdminRole)] 
+    [Authorize(Roles = WC.AdminRole)]
     public class ApplicationTypeController : Controller
     {
         private readonly IApplicationTypeService _applicationTypeService;
         private readonly INotyfService _notyf;
 
-        public ApplicationTypeController(IApplicationTypeService applicationTypeService , INotyfService notyf)
-        {   
+        public ApplicationTypeController(IApplicationTypeService applicationTypeService, INotyfService notyf)
+        {
             _applicationTypeService = applicationTypeService;
             _notyf = notyf;
         }
@@ -21,28 +21,34 @@ namespace MansorySupplyHub.Controllers
         [HttpGet("applicationTypes")]
         public async Task<IActionResult> Index()
         {
-            var applicationType = await _applicationTypeService.GetAllApplicationTypes();
-            if (applicationType.Success)
+            var result = await _applicationTypeService.GetAllApplicationTypes();
+            if (result.Success)
             {
-                return View(applicationType.Data);
+                return View(result.Data);
             }
+
+            _notyf.Error("Failed to load application types.");
             return View();
         }
 
         [HttpGet("applicationType/{id}")]
         public async Task<IActionResult> ApplicationType(int id)
         {
-            var applicationType = await _applicationTypeService.GetApplicationTypeDetails(id);
-            if (applicationType.Success)
+            var result = await _applicationTypeService.GetApplicationTypeDetails(id);
+            if (result.Success)
             {
-                return View(applicationType.Data);
+                return View(result.Data);
             }
+
+            _notyf.Error("Failed to load application type details.");
             return RedirectToAction("Index");
         }
 
         [HttpGet("create-applicationType")]
-        public IActionResult CreateApplicationType() =>
-             View();
+        public IActionResult CreateApplicationType()
+        {
+            return View();
+        }
 
         [HttpPost("create-applicationType")]
         public async Task<IActionResult> CreateApplicationType([FromForm] CreateApplicationTypeDto request)
@@ -50,23 +56,24 @@ namespace MansorySupplyHub.Controllers
             var result = await _applicationTypeService.CreateApplicationType(request);
             if (result.Success)
             {
-                _notyf.Success("ApplicationType Created Successfully");
+                _notyf.Success("Application type created successfully.");
                 return RedirectToAction("Index");
             }
-            _notyf.Error("Failed To Create ApplicationType");
+
+            _notyf.Error("Failed to create application type.");
             return RedirectToAction("CreateApplicationType");
         }
 
         [HttpGet("applicationType/edit/{id}")]
         public async Task<IActionResult> EditApplicationType(int id)
         {
-            var response = await _applicationTypeService.GetApplicationTypeDetails(id);
-            if (response.Success)
+            var result = await _applicationTypeService.GetApplicationTypeDetails(id);
+            if (result.Success)
             {
-
-                return View(response.Data);
+                return View(result.Data);
             }
-           
+
+            _notyf.Error("Failed to load application type details.");
             return RedirectToAction("Index");
         }
 
@@ -77,23 +84,25 @@ namespace MansorySupplyHub.Controllers
             var result = await _applicationTypeService.EditApplicationType(request, id);
             if (result.Success)
             {
-                _notyf.Success("ApplicationType Edited Successfully");
+                _notyf.Success("Application type edited successfully.");
                 return RedirectToAction(nameof(Index));
             }
-            _notyf.Error("Failed to Edit ApplicationType");
-            return RedirectToAction("Index");
-        } 
 
-        [HttpGet("category/delete/{id}")]
+            _notyf.Error("Failed to edit application type.");
+            return RedirectToAction("Index");
+        }
+
+        [HttpGet("applicationType/delete/{id}")]
         public async Task<IActionResult> DeleteApplicationType([FromRoute] int id)
         {
             var result = await _applicationTypeService.DeleteApplicationType(id);
             if (result.Success)
             {
-                _notyf.Success("ApplicationType Deleted Successfully");
+                _notyf.Success("Application type deleted successfully.");
                 return RedirectToAction(nameof(Index));
             }
-            _notyf.Error("Failed to delete ApplicationType");
+
+            _notyf.Error("Failed to delete application type.");
             return RedirectToAction(nameof(Index));
         }
     }

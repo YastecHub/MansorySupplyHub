@@ -5,6 +5,7 @@ using MansorySupplyHub.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MansorySupplyHub.Utility;
+using AspNetCoreHero.ToastNotification.Abstractions;
 
 namespace MansorySupplyHub.Controllers
 {
@@ -12,11 +13,13 @@ namespace MansorySupplyHub.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly ApplicationDbContext _db;
+        private readonly INotyfService _notyf;
 
-        public HomeController(ILogger<HomeController> logger, ApplicationDbContext db)
+        public HomeController(ILogger<HomeController> logger, ApplicationDbContext db, INotyfService notyf)
         {
             _logger = logger;
             _db = db;
+            _notyf = notyf;
         }
 
         public IActionResult Index()
@@ -38,25 +41,14 @@ namespace MansorySupplyHub.Controllers
                 shoppingCartList = HttpContext.Session.Get<List<ShoppingCart>>(WC.SessionCart);
             }
 
-
-
-            DetailsViewModel DetailsViewModel = new DetailsViewModel()
+            DetailsViewModel detailsViewModel = new DetailsViewModel()
             {
                 Product = _db.Products.Include(u => u.Category).Include(u => u.ApplicationType)
                 .Where(u => u.Id == id).FirstOrDefault(),
-                ExistsInCart = false
+                ExistsInCart = shoppingCartList.Any(item => item.ProductId == id)
             };
 
-
-            foreach (var item in shoppingCartList)
-            {
-                if (item.ProductId == id)
-                {
-                    DetailsViewModel.ExistsInCart = true;
-                }
-            }
-
-            return View(DetailsViewModel);
+            return View(detailsViewModel);
         }
 
         [HttpPost, ActionName("Details")]
@@ -68,8 +60,19 @@ namespace MansorySupplyHub.Controllers
             {
                 shoppingCartList = HttpContext.Session.Get<List<ShoppingCart>>(WC.SessionCart);
             }
-            shoppingCartList.Add(new ShoppingCart { ProductId = id });
-            HttpContext.Session.Set(WC.SessionCart, shoppingCartList);
+
+            var productInCart = shoppingCartList.SingleOrDefault(item => item.ProductId == id);
+            if (productInCart == null)
+            {
+                shoppingCartList.Add(new ShoppingCart { ProductId = id });
+                HttpContext.Session.Set(WC.SessionCart, shoppingCartList);
+                _notyf.Success("Product added to cart successfully.");
+            }
+            else
+            {
+                _notyf.Error("Product is already in the cart.");
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -86,9 +89,14 @@ namespace MansorySupplyHub.Controllers
             if (itemToRemove != null)
             {
                 shoppingCartList.Remove(itemToRemove);
+                HttpContext.Session.Set(WC.SessionCart, shoppingCartList);
+                _notyf.Success("Product removed from cart successfully.");
+            }
+            else
+            {
+                _notyf.Error("Product not found in cart.");
             }
 
-            HttpContext.Session.Set(WC.SessionCart, shoppingCartList);
             return RedirectToAction(nameof(Index));
         }
 

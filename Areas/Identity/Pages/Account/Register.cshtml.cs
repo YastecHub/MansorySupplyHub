@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
+using AspNetCoreHero.ToastNotification.Abstractions;
 
 namespace MansorySupplyHub.Areas.Identity.Pages.Account
 {
@@ -19,17 +20,20 @@ namespace MansorySupplyHub.Areas.Identity.Pages.Account
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<RegisterModel> _logger;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly INotyfService _notyf;
 
         public RegisterModel(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             ILogger<RegisterModel> logger,
-            RoleManager<IdentityRole> roleManager)
+            RoleManager<IdentityRole> roleManager,
+            INotyfService notyf)
         {
             _roleManager = roleManager;
             _userManager = userManager;
             _signInManager = signInManager;
             _logger = logger;
+            _notyf = notyf;
         }
 
         [BindProperty]
@@ -91,7 +95,6 @@ namespace MansorySupplyHub.Areas.Identity.Pages.Account
                 {
                     if (User.IsInRole(WC.AdminRole))
                     {
-                        // An admin has logged in and they try to create a new user
                         await _userManager.AddToRoleAsync(user, WC.AdminRole);
                     }
                     else
@@ -109,9 +112,9 @@ namespace MansorySupplyHub.Areas.Identity.Pages.Account
                         values: new { area = "Identity", userId = user.Id, code = code, returnUrl = returnUrl },
                         protocol: Request.Scheme);
 
-                   
                     if (_userManager.Options.SignIn.RequireConfirmedAccount)
                     {
+                        _notyf.Success("Registration successful. Please check your email to confirm your account.");
                         return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
                     }
                     else
@@ -122,7 +125,8 @@ namespace MansorySupplyHub.Areas.Identity.Pages.Account
                         }
                         else
                         {
-                            return RedirectToAction("Index");
+                            _notyf.Success("User registered successfully.");
+                            return RedirectToAction("Index", "Home"); // Redirect to some admin home or dashboard
                         }
                         return LocalRedirect(returnUrl);
                     }
@@ -131,6 +135,7 @@ namespace MansorySupplyHub.Areas.Identity.Pages.Account
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
+                _notyf.Error("Failed to register user. Please correct the errors and try again.");
             }
 
             // If we got this far, something failed, redisplay form
