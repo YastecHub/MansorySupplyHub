@@ -52,7 +52,7 @@ namespace MansorySupplyHub.Controllers
         }
 
         [HttpPost, ActionName("Details")]
-        public IActionResult DetailsPost(int id)
+        public IActionResult DetailsPost(int id , DetailsViewModel detailsVM)
         {
             List<ShoppingCart> shoppingCartList = new List<ShoppingCart>();
             if (HttpContext.Session.Get<IEnumerable<ShoppingCart>>(WC.SessionCart) != null
@@ -64,7 +64,7 @@ namespace MansorySupplyHub.Controllers
             var productInCart = shoppingCartList.SingleOrDefault(item => item.ProductId == id);
             if (productInCart == null)
             {
-                shoppingCartList.Add(new ShoppingCart { ProductId = id });
+                shoppingCartList.Add(new ShoppingCart { ProductId = id, Sqft = detailsVM.Product.TempSqft});
                 HttpContext.Session.Set(WC.SessionCart, shoppingCartList);
                 _notyf.Success("Product added to cart successfully.");
             }

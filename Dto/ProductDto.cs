@@ -29,5 +29,10 @@ namespace MansorySupplyHub.Dto
         public int ApplicationTypeId { get; set; }
         [ForeignKey("ApplicationTypeId")]
         public virtual ApplicationType ApplicationType { get; set; }
+
+
+        [NotMapped]
+        [Range(1,1000)]
+        public int TempSqft { get; set; }
     }
 }

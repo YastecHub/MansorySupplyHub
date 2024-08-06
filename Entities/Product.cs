@@ -6,6 +6,10 @@ namespace MansorySupplyHub.Entities
 {
     public class Product : BaseEntity
     {
+        public Product()
+        {
+            TempSqft = 1;
+        }
         public string Name { get; set; }
         public string Description { get; set; } 
         public double Price { get; set; }
@@ -15,6 +19,10 @@ namespace MansorySupplyHub.Entities
         public int ApplicationTypeId { get; set; }
         public ApplicationType ApplicationType { get; set; }
 
-       
+        [NotMapped]
+        [Range(1, 1000)]
+        public int TempSqft { get; set; }
+
+
     }
 }

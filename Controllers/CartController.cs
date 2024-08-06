@@ -33,7 +33,19 @@ namespace MansorySupplyHub.Controllers
             var result = await _cartService.GetProductsInCart(productIds);
             if (result.Success)
             {
-                return View(result.Data);
+                var products = result.Data;
+
+                // Set TempSqFt for each product based on the shopping cart
+                foreach (var cartItem in shoppingCartList)
+                {
+                    var product = products.FirstOrDefault(p => p.Id == cartItem.ProductId);
+                    if (product != null)
+                    {
+                        product.TempSqft = cartItem.Sqft;
+                    }
+                }
+
+                return View(products);
             }
 
             _notyf.Error("Failed to load cart items.");

@@ -12,17 +12,21 @@ namespace MansorySupplyHub.Implementation.Services
     {
         private readonly ApplicationDbContext _dbcontext;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly ILogger<ProductService> _logger;
 
-        public ProductService(ApplicationDbContext dbcontext, IWebHostEnvironment webHostEnvironment)
+        public ProductService(ApplicationDbContext dbcontext, IWebHostEnvironment webHostEnvironment, ILogger<ProductService> logger)
         {
             _dbcontext = dbcontext;
             _webHostEnvironment = webHostEnvironment;
+            _logger = logger;
         }
 
         public async Task<ResponseModel<ProductDto>> CreateProduct(CreateProductDto request)
         {
             try
             {
+                _logger.LogInformation("Creating a new product: {ProductName}", request.Name);
+
                 var product = new Product
                 {
                     Name = request.Name,
@@ -38,6 +42,8 @@ namespace MansorySupplyHub.Implementation.Services
                 _dbcontext.Products.Add(product);
                 await _dbcontext.SaveChangesAsync();
 
+                _logger.LogInformation("Product created successfully: {ProductName}", request.Name);
+
                 return new ResponseModel<ProductDto>
                 {
                     Success = true,
@@ -46,11 +52,17 @@ namespace MansorySupplyHub.Implementation.Services
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while creating the product: {ProductName}", request.Name);
+
                 return new ResponseModel<ProductDto>
                 {
                     Success = false,
                     Message = "An error occurred while creating the product."
                 };
+            }
+            finally
+            {
+                _logger.LogDebug("CreateProduct method execution completed.");
             }
         }
 
@@ -58,9 +70,12 @@ namespace MansorySupplyHub.Implementation.Services
         {
             try
             {
+                _logger.LogInformation("Editing product: {ProductId}", id);
+
                 var product = await _dbcontext.Products.FindAsync(id);
                 if (product == null)
                 {
+                    _logger.LogWarning("Product not found: {ProductId}", id);
                     return new ResponseModel<ProductDto>
                     {
                         Data = null,
@@ -76,6 +91,8 @@ namespace MansorySupplyHub.Implementation.Services
 
                 _dbcontext.Products.Update(product);
                 await _dbcontext.SaveChangesAsync();
+
+                _logger.LogInformation("Product updated successfully: {ProductId}", id);
 
                 var productDto = new ProductDto
                 {
@@ -96,6 +113,8 @@ namespace MansorySupplyHub.Implementation.Services
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while updating the product: {ProductId}", id);
+
                 return new ResponseModel<ProductDto>
                 {
                     Data = null,
@@ -103,15 +122,22 @@ namespace MansorySupplyHub.Implementation.Services
                     Message = "An error occurred while updating the product."
                 };
             }
+            finally
+            {
+                _logger.LogDebug("EditProduct method execution completed.");
+            }
         }
 
         public async Task<ResponseModel<bool>> DeleteProduct(int id)
         {
             try
             {
+                _logger.LogInformation("Deleting product: {ProductId}", id);
+
                 var product = await _dbcontext.Products.FindAsync(id);
                 if (product == null)
                 {
+                    _logger.LogWarning("Product not found: {ProductId}", id);
                     return new ResponseModel<bool>
                     {
                         Data = false,
@@ -123,6 +149,8 @@ namespace MansorySupplyHub.Implementation.Services
                 _dbcontext.Products.Remove(product);
                 await _dbcontext.SaveChangesAsync();
 
+                _logger.LogInformation("Product deleted successfully: {ProductId}", id);
+
                 return new ResponseModel<bool>
                 {
                     Data = true,
@@ -132,6 +160,8 @@ namespace MansorySupplyHub.Implementation.Services
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while deleting the product: {ProductId}", id);
+
                 return new ResponseModel<bool>
                 {
                     Data = false,
@@ -139,12 +169,18 @@ namespace MansorySupplyHub.Implementation.Services
                     Message = "An error occurred while deleting the product."
                 };
             }
+            finally
+            {
+                _logger.LogDebug("DeleteProduct method execution completed.");
+            }
         }
 
         public async Task<ResponseModel<List<ProductDto>>> GetAllProducts()
         {
             try
             {
+                _logger.LogInformation("Retrieving all products");
+
                 var products = await _dbcontext.Products
                     .Include(p => p.Category)
                     .Include(p => p.ApplicationType)
@@ -163,6 +199,8 @@ namespace MansorySupplyHub.Implementation.Services
                     ApplicationType = product.ApplicationType,
                 }).ToList();
 
+                _logger.LogInformation("Products retrieved successfully");
+
                 return new ResponseModel<List<ProductDto>>
                 {
                     Data = productDtos,
@@ -172,6 +210,8 @@ namespace MansorySupplyHub.Implementation.Services
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while retrieving products");
+
                 return new ResponseModel<List<ProductDto>>
                 {
                     Data = null,
@@ -179,15 +219,22 @@ namespace MansorySupplyHub.Implementation.Services
                     Message = "An error occurred while retrieving products."
                 };
             }
+            finally
+            {
+                _logger.LogDebug("GetAllProducts method execution completed.");
+            }
         }
 
         public async Task<ResponseModel<ProductDto>> GetProductDetails(int id)
         {
             try
             {
+                _logger.LogInformation("Retrieving product details: {ProductId}", id);
+
                 var product = await _dbcontext.Products.Include(p => p.Category).FirstOrDefaultAsync(p => p.Id == id);
                 if (product == null)
                 {
+                    _logger.LogWarning("Product not found: {ProductId}", id);
                     return new ResponseModel<ProductDto>
                     {
                         Data = null,
@@ -209,6 +256,8 @@ namespace MansorySupplyHub.Implementation.Services
                     ApplicationTypeId = product.ApplicationTypeId,
                 };
 
+                _logger.LogInformation("Product details retrieved successfully: {ProductId}", id);
+
                 return new ResponseModel<ProductDto>
                 {
                     Data = productDto,
@@ -218,6 +267,8 @@ namespace MansorySupplyHub.Implementation.Services
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while retrieving product details: {ProductId}", id);
+
                 return new ResponseModel<ProductDto>
                 {
                     Data = null,
@@ -225,22 +276,37 @@ namespace MansorySupplyHub.Implementation.Services
                     Message = "An error occurred while retrieving product details."
                 };
             }
+            finally
+            {
+                _logger.LogDebug("GetProductDetails method execution completed.");
+            }
         }
 
         public async Task<IEnumerable<SelectListItem>> GetCategorySelectList()
         {
             try
             {
-                return await _dbcontext.Categories.Select(c => new SelectListItem
+                _logger.LogInformation("Retrieving category select list");
+
+                var categories = await _dbcontext.Categories.Select(c => new SelectListItem
                 {
                     Text = c.Name,
                     Value = c.Id.ToString()
                 }).ToListAsync();
+
+                _logger.LogInformation("Category select list retrieved successfully");
+
+                return categories;
             }
             catch (Exception ex)
             {
-               
+                _logger.LogError(ex, "An error occurred while retrieving the category select list");
+
                 return new List<SelectListItem>();
+            }
+            finally
+            {
+                _logger.LogDebug("GetCategorySelectList method execution completed.");
             }
         }
 
@@ -248,17 +314,28 @@ namespace MansorySupplyHub.Implementation.Services
         {
             try
             {
-                return await _dbcontext.ApplicationTypes.Select(at => new SelectListItem
+                _logger.LogInformation("Retrieving application type select list");
+
+                var applicationTypes = await _dbcontext.ApplicationTypes.Select(at => new SelectListItem
                 {
                     Text = at.Name,
                     Value = at.Id.ToString()
                 }).ToListAsync();
+
+                _logger.LogInformation("Application type select list retrieved successfully");
+
+                return applicationTypes;
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while retrieving the application type select list");
+
                 return new List<SelectListItem>();
             }
+            finally
+            {
+                _logger.LogDebug("GetApplicationTypeSelectList method execution completed.");
+            }
         }
-
     }
 }
