@@ -9,7 +9,6 @@ using System.Security.Claims;
 
 namespace MansorySupplyHub.Controllers
 {
-    [Authorize]
     public class CartController : Controller
     {
         private readonly ICartService _cartService;
@@ -24,6 +23,7 @@ namespace MansorySupplyHub.Controllers
         }
 
         [HttpGet("cart-items")]
+        [ActionName("Index")]
         public async Task<IActionResult> Index()
         {
             var shoppingCartSession = HttpContext.Session.Get<IEnumerable<ShoppingCart>>(WC.SessionCart);
@@ -52,6 +52,23 @@ namespace MansorySupplyHub.Controllers
             return View(new List<ProductDto>());
         }
 
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [ActionName("Index")]
+        public IActionResult IndexPost(IEnumerable<Product> ProdList)
+        {
+            List<ShoppingCart> shoppingCartList = new List<ShoppingCart>();
+            foreach (Product prod in ProdList)
+            {
+                shoppingCartList.Add(new ShoppingCart { ProductId = prod.Id, Sqft = prod.TempSqft });
+            }
+
+            HttpContext.Session.Set(WC.SessionCart, shoppingCartList);
+            return RedirectToAction(nameof(Summary));
+        }
+
+
         [HttpGet("cart-summary")]
         public async Task<IActionResult> Summary()
         {
@@ -75,20 +92,42 @@ namespace MansorySupplyHub.Controllers
                 return View(result.Data);
             }
 
-            _notyf.Error("Failed to load cart summary.");
+            _notyf.Error("Failed to load cart summary, Please login into the application");
             return RedirectToAction("Index");
         }
-
         [HttpPost("cart-summary")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SummaryPost(ProductUserDto productUserDto)
         {
-            // Process cart summary here...
+            if (!ModelState.IsValid)
+            {
+                // Reload the cart summary view with validation errors
+                var claimsIdentity = (ClaimsIdentity)User.Identity;
+                var claim = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier);
+                var userId = claim?.Value;
 
+                var shoppingCartSession = HttpContext.Session.Get<IEnumerable<ShoppingCart>>(WC.SessionCart);
+                var shoppingCartList = shoppingCartSession?.ToList() ?? new List<ShoppingCart>();
+                var productIds = shoppingCartList.Select(i => i.ProductId).ToList();
+
+                var result = await _cartService.GetUserCartDetails(userId, productIds);
+                if (result.Success)
+                {
+                    productUserDto.ProductList = result.Data.ProductList;
+                    return View("Summary", productUserDto);
+                }
+
+                _notyf.Error("Failed to load cart summary. ");
+                return RedirectToAction("Index");
+            }
+
+            // Process cart summary here...
             _notyf.Success("Cart summary processed successfully.");
             return RedirectToAction(nameof(InquiryConfirmation));
         }
 
+
+        //[Authorize]
         [HttpGet("cart-confirmation")]
         public async Task<IActionResult> InquiryConfirmation()
         {
@@ -139,6 +178,36 @@ namespace MansorySupplyHub.Controllers
                 _notyf.Error("Failed to remove product from cart.");
             }
 
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ClearCart()
+        {
+            var result = await _cartService.ClearCart();
+            if (result.Success)
+            {
+                _notyf.Success("Cart cleared successfully.");
+            }
+            else
+            {
+                _notyf.Error("Failed to clear the cart.");
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult UpdateCart(IEnumerable<Product> ProdList)
+        {
+            List<ShoppingCart> shoppingCartList = new List<ShoppingCart>();
+            foreach (Product prod in ProdList)
+            {
+                shoppingCartList.Add(new ShoppingCart { ProductId = prod.Id, Sqft = prod.TempSqft });
+            }
+            HttpContext.Session.Set(WC.SessionCart, shoppingCartList);
             return RedirectToAction(nameof(Index));
         }
     }

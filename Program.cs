@@ -5,20 +5,18 @@ using MansorySupplyHub.Data;
 using MansorySupplyHub.Implementation.Interface;
 using MansorySupplyHub.Implementation.Services;
 using MansorySupplyHub.Entities;
-using MansorySupplyHub.Extensions;
-using MansorySupplyHub.Dto;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Serilog;
+using MansorySupplyHub.Dto;
+using MansorySupplyHub.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure Serilog
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .CreateLogger();
 
-
-
-// Use Serilog for logging
 builder.Host.UseSerilog();
 
 builder.Services.AddRazorPages(options =>
@@ -80,7 +78,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseSession();
-app.MapRazorPages();
+app.MapRazorPages(); 
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");

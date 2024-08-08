@@ -20,7 +20,7 @@ namespace MansorySupplyHub.Entities
         public ApplicationType ApplicationType { get; set; }
 
         [NotMapped]
-        [Range(1, 1000)]
+        [Range(1, 100000)]
         public int TempSqft { get; set; }
 
 

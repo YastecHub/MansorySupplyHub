@@ -32,7 +32,7 @@ namespace MansorySupplyHub.Dto
 
 
         [NotMapped]
-        [Range(1,1000)]
+        [Range(1, 100000)]
         public int TempSqft { get; set; }
     }
 }

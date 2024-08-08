@@ -1,6 +1,7 @@
 ﻿@model MansorySupplyHub.Dto.ProductUserDto
 
-<form method="post">
+<form method="post" asp-action="SummaryPost">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
     <br />
     <div class="backgroundWhiteBorder">
         <div class="container">
@@ -28,7 +29,7 @@
                                         <label>Name</label>
                                     </div>
                                     <div class="col-9">
-                                        <input asp-for="ApplicationUser.FullName" type="text" class="form-control" />
+                                        <input asp-for="ApplicationUser.FullName" type="text" required class="form-control" />
                                         <span asp-validation-for="ApplicationUser.FullName" class="text-danger"></span>
                                     </div>
                                 </div>
@@ -50,6 +51,49 @@
                                         <span asp-validation-for="ApplicationUser.Email" class="text-danger"></span>
                                     </div>
                                 </div>
+
+                                @if (User.IsInRole(MansorySupplyHub.WC.AdminRole))
+                                {
+                                    <div class="row my-1">
+                                        <div class="col-3">
+                                            <label>Street Address</label>
+                                        </div>
+                                        <div class="col-9">
+                                            <input asp-for="ApplicationUser.StreetAddress" type="text" class="form-control" />
+                                            <span asp-validation-for="ApplicationUser.StreetAddress" class="text-danger"></span>
+                                        </div>
+                                    </div>
+
+                                    <div class="row my-1">
+                                        <div class="col-3">
+                                            <label>City</label>
+                                        </div>
+                                        <div class="col-9">
+                                            <input asp-for="ApplicationUser.City" type="text" class="form-control" />
+                                            <span asp-validation-for="ApplicationUser.City" class="text-danger"></span>
+                                        </div>
+                                    </div>
+
+                                    <div class="row my-1">
+                                        <div class="col-3">
+                                            <label>State</label>
+                                        </div>
+                                        <div class="col-9">
+                                            <input asp-for="ApplicationUser.State" type="text" class="form-control" />
+                                            <span asp-validation-for="ApplicationUser.State" class="text-danger"></span>
+                                        </div>
+                                    </div>
+
+                                    <div class="row my-1">
+                                        <div class="col-3">
+                                            <label>Postal Code</label>
+                                        </div>
+                                        <div class="col-9">
+                                            <input asp-for="ApplicationUser.PostalCode" type="text" class="form-control" />
+                                            <span asp-validation-for="ApplicationUser.PostalCode" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                }
                             </div>
                             <div class="col-12 col-lg-5 row">
                                 <div class="col-12">
@@ -75,17 +119,16 @@
                     </div>
                 </div>
                 <div class="card-footer">
-                    <div class="col-12 col-md-5 offset-md-7"> 
-                        <a asp-action="InquiryConfirmation" class="btn btn-primary form-control">
+                    <div class="col-12 col-md-5 offset-md-7">
+                        <button type="submit" class="btn btn-primary form-control">
                             <span>Submit Inquiry</span>
-                        </a> 
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </form>
-
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
