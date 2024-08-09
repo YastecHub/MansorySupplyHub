@@ -99,7 +99,7 @@ namespace MansorySupplyHub.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SummaryPost(ProductUserDto productUserDto)
         {
-            if (!ModelState.IsValid)
+            if (ModelState.IsValid)
             {
                 // Reload the cart summary view with validation errors
                 var claimsIdentity = (ClaimsIdentity)User.Identity;

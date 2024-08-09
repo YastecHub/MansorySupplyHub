@@ -5,30 +5,41 @@
 @inject UserManager<ApplicationUser> UserManager
 @inject IHttpContextAccessor HttpContextAccessor
 
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <title>@ViewData["Title"] - MansorySupplyHub</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css" />
     <link rel="stylesheet" href="~/MansorySupplyHub.styles.css" asp-append-version="true" />
+
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="~/fontawesome/css/all.css" asp-append-version="true" />
-    <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote.min.css" rel="stylesheet">
+
+    <!-- DataTables -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css" />
+
+    <!-- Summernote -->
+    <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote.min.css" rel="stylesheet" />
 </head>
+
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-dark border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-sm navbar-dark bg-dark border-bottom box-shadow mb-3">
             <div class="container">
                 <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
                     <img src="~/Image/tile.png" width="40%" />
                 </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
+                        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
@@ -39,19 +50,49 @@
                         @if (User.IsInRole(WC.AdminRole))
                         {
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                                   data-bs-toggle="dropdown" aria-expanded="false">
                                     Content Management
                                 </a>
                                 <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                    <li><a class="dropdown-item" asp-area="" asp-controller="Category" asp-action="Index">Category</a></li>
-                                    <li><a class="dropdown-item" asp-area="" asp-controller="ApplicationType" asp-action="Index">ApplicationType</a></li>
-                                    <li><a class="dropdown-item" asp-area="" asp-controller="Product" asp-action="Index">Product</a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Register">Create Admin User</a>
+                                    <li>
+                                        <a class="dropdown-item" asp-area="" asp-controller="Category"
+                                           asp-action="Index">Category</a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-area="" asp-controller="ApplicationType"
+                                           asp-action="Index">ApplicationType</a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-area="" asp-controller="Product"
+                                           asp-action="Index">Product</a>
+                                    </li>
+                                    <li>
+                                        <hr class="dropdown-divider">
+                                    </li>
+                                    <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Register">
+                                        Create
+                                        Admin User
+                                    </a>
+                                </ul>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                                   data-bs-toggle="dropdown" aria-expanded="false">
+                                    Order/Inquiry Management
+                                </a>
+                                <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                    <li>
+                                        <a class="dropdown-item" asp-area="" asp-controller="Inquiry"
+                                           asp-action="Index">Inquiry</a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-area="" asp-controller="Order"
+                                           asp-action="Index">Order</a>
+                                    </li>
                                 </ul>
                             </li>
                         }
-
                         <li>
                             @if (HttpContextAccessor.HttpContext.Session.Get<List<ShoppingCart>>(WC.SessionCart) != null)
                             {
@@ -87,16 +128,28 @@
         </div>
     </footer>
 
+    <!-- jQuery -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @await Component.InvokeAsync("Notyf")
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/js/bootstrap.min.js" integrity="sha384-oesi62hOLfzrys4LxRF63OJCXdXDipiYWBnvTl9Y9/TRlw5xlKIEHpNyvvDShgf/" crossorigin="anonymous"></script>
-    <script src="https://cdn.syncfusion.com/ej2/dist/ej2.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.js"></script>
+
+    <!-- Bootstrap Bundle (includes Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- DataTables -->
     <script src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Summernote -->
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.js"></script>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
+
+    <!-- Notyf Notifications -->
+    @await Component.InvokeAsync("Notyf")
+
+    <!-- Site Scripts -->
     <script src="~/js/site.js" asp-append-version="true"></script>
+
     @RenderSection("Scripts", required: false)
 </body>
+
 </html>
