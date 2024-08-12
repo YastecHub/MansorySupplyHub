@@ -166,6 +166,7 @@ namespace MansorySupplyHub.Implementation.Services
                 _logger.LogInformation("Retrieving inquiry details for header: {InquiryHeaderId}", inquiryHeaderId);
 
                 var inquiryDetails = await _dbcontext.InquiryDetails
+                    .Include(d => d.Product) // Include related Product data
                     .Where(d => d.InquiryHeaderId == inquiryHeaderId)
                     .ToListAsync();
 
@@ -173,7 +174,13 @@ namespace MansorySupplyHub.Implementation.Services
                 {
                     Id = detail.Id,
                     InquiryHeaderId = detail.InquiryHeaderId,
-                    ProductId = detail.ProductId
+                    ProductId = detail.ProductId,
+                    Product = detail.Product != null ? new ProductDto
+                    {
+                        Id = detail.Product.Id,
+                        Name = detail.Product.Name,
+                        Price = detail.Product.Price
+                    } : null
                 }).ToList();
 
                 _logger.LogInformation("Inquiry details retrieved successfully for header: {InquiryHeaderId}", inquiryHeaderId);

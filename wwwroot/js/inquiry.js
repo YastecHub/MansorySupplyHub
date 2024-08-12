@@ -9,7 +9,8 @@ function loadDataTable() {
         "ajax": {
             "url": "/inquiry/GetInquiryList",
             "type": "GET",
-            "datatype": "json"
+            "dataType": "json", // Fix typo
+            "deferRender": true // Add this for server-side processing
         },
         "columns": [
             { "data": "id", "width": "10%" },

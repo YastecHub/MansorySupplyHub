@@ -68,7 +68,7 @@ namespace MansorySupplyHub.Controllers
                 ShoppingCart shoppingCart = new ShoppingCart()
                 {
                     ProductId = detail.ProductId,
-                    Sqft = 1  // Assuming a default value for demonstration
+                    Sqft = 1  
                 };
                 shoppingCartList.Add(shoppingCart);
             }
@@ -93,6 +93,29 @@ namespace MansorySupplyHub.Controllers
 
             TempData[WC.Success] = "Inquiry deleted successfully.";
             return RedirectToAction(nameof(Index));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetInquiryList()
+        {
+            var inquiryHeadersResponse = await _inqHService.GetAllInquiryHeaders();
+
+            if (!inquiryHeadersResponse.Success)
+            {
+                return Json(new { error = "Unable to load inquiry list." });
+            }
+
+            var inquiryHeaders = inquiryHeadersResponse.Data;
+
+            var data = inquiryHeaders.Select(inquiryHeader => new
+            {
+                id = inquiryHeader.Id,
+                fullName = inquiryHeader.FullName,
+                phoneNumber = inquiryHeader.PhoneNumber,
+                email = inquiryHeader.Email
+            });
+
+            return Json(new { data });
         }
     }
 }
