@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MansorySupplyHub.Dto;
@@ -85,34 +83,16 @@ namespace MansorySupplyHub.Controllers
         public async Task<IActionResult> Delete()
         {
             var deleteDetailsResponse = await _inqDService.DeleteInquiryDetailsByHeaderId(InquiryVM.InquiryHeader.Id);
-            if (!deleteDetailsResponse.Success)
-            {
-                TempData[WC.Error] = "Unable to delete the inquiry details.";
-                return RedirectToAction(nameof(Index));
-            }
-
             var deleteHeaderResponse = await _inqHService.DeleteInquiryHeader(InquiryVM.InquiryHeader.Id);
-            if (!deleteHeaderResponse.Success)
+
+            if (!deleteDetailsResponse.Success || !deleteHeaderResponse.Success)
             {
-                TempData[WC.Error] = "Unable to delete the inquiry header.";
+                TempData[WC.Error] = "Unable to delete inquiry.";
                 return RedirectToAction(nameof(Index));
             }
 
             TempData[WC.Success] = "Inquiry deleted successfully.";
             return RedirectToAction(nameof(Index));
         }
-
-        #region API CALLS
-        [HttpGet]
-        public async Task<IActionResult> GetInquiryList()
-        {
-            var inquiryHeadersResponse = await _inqHService.GetAllInquiryHeaders();
-            if (!inquiryHeadersResponse.Success)
-            {
-                return Json(new { success = false, message = "Failed to load inquiry headers." });
-            }
-            return Json(new { data = inquiryHeadersResponse.Data });
-        }
-        #endregion
     }
 }

@@ -22,7 +22,27 @@ namespace MansorySupplyHub.Implementation.Services
         {
             try
             {
-                _logger.LogInformation("Creating a new inquiry header.");
+                _logger.LogInformation("Creating a new inquiry header for user: {UserId}", request.ApplicationUserId);
+
+                if (string.IsNullOrEmpty(request.ApplicationUserId))
+                {
+                    _logger.LogWarning("ApplicationUserId is null or empty.");
+                    return new ResponseModel<InquiryHeaderDto>
+                    {
+                        Success = false,
+                        Message = "User ID is required."
+                    };
+                }
+
+                if (string.IsNullOrEmpty(request.Email))
+                {
+                    _logger.LogWarning("Email is null or empty.");
+                    return new ResponseModel<InquiryHeaderDto>
+                    {
+                        Success = false,
+                        Message = "Email is required."
+                    };
+                }
 
                 var inquiryHeader = new InquiryHeader
                 {
@@ -36,18 +56,28 @@ namespace MansorySupplyHub.Implementation.Services
                 _dbcontext.InquiryHeaders.Add(inquiryHeader);
                 await _dbcontext.SaveChangesAsync();
 
-                _logger.LogInformation("Inquiry header created successfully.");
+                _logger.LogInformation("Inquiry header created successfully with ID: {InquiryHeaderId}", inquiryHeader.Id);
+
+                var inquiryHeaderDto = new InquiryHeaderDto
+                {
+                    Id = inquiryHeader.Id,
+                    ApplicationUserId = inquiryHeader.ApplicationUserId,
+                    InquiryDate = inquiryHeader.InquiryDate,
+                    PhoneNumber = inquiryHeader.PhoneNumber,
+                    FullName = inquiryHeader.FullName,
+                    Email = inquiryHeader.Email
+                };
 
                 return new ResponseModel<InquiryHeaderDto>
                 {
                     Success = true,
+                    Data = inquiryHeaderDto,
                     Message = "Inquiry header created successfully."
                 };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while creating the inquiry header.");
-
                 return new ResponseModel<InquiryHeaderDto>
                 {
                     Success = false,
