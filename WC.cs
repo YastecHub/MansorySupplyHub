@@ -12,6 +12,9 @@ namespace MansorySupplyHub
 
         public const string AdminRole = "Admin";
         public const string CustomerRole = "Customer";
+        public const string SuperAdminRole = "SuperAdmin";
+
+
 
         public const string EmailAdmin = "admin@gmail.com";
 

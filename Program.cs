@@ -27,7 +27,7 @@ builder.Services.AddRazorPages(options =>
 
 builder.Services.AddFluentEmail(builder.Configuration);
 
-builder.Services.Configure<SMTPConfig>(builder.Configuration.GetSection("SMTPConfig"));
+builder.Services.Configure<EmailConfiguration>(builder.Configuration.GetSection("SMTPConfig"));
 builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));

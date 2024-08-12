@@ -103,12 +103,10 @@ namespace MansorySupplyHub.Controllers
             return RedirectToAction("Index");
         }
 
-
         [HttpPost("cart-summary")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SummaryPost(ProductUserDto productUserDto)
         {
-
             var claimsIdentity = (ClaimsIdentity)User.Identity;
             var claim = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier);
             var userId = claim?.Value;
@@ -163,42 +161,31 @@ namespace MansorySupplyHub.Controllers
                 }
             }
 
+            // Send email confirmation
+            var profile = new Profile
+            {
+                FirstName = productUserDto.ApplicationUser.FullName,
+                Email = productUserDto.ApplicationUser.Email
+            };
+
+            var emailResponse = await _emailService.SendNotificationToUserAsync(profile);
+            if (emailResponse.Success)
+            {
+                _notyf.Success("Inquiry submitted successfully. A confirmation email has been sent.");
+            }
+            else
+            {
+                _notyf.Warning("Inquiry submitted, but the confirmation email could not be sent.");
+            }
+
             HttpContext.Session.Clear();
-            _notyf.Success("Inquiry submitted successfully.");
             return RedirectToAction(nameof(InquiryConfirmation));
         }
-
 
         [HttpGet("cart-confirmation")]
         public async Task<IActionResult> InquiryConfirmation()
         {
-            var result = await _cartService.ClearCart();
-            if (result.Success)
-            {
-                _notyf.Success("Your cart has been cleared.");
-
-                // Send email confirmation
-                EmailMetadata emailMetadata = new EmailMetadata(
-                    "user@example.com",
-                    "Inquiry Confirmation",
-                    "Your inquiry has been successfully submitted. Thank you for your interest!"
-                );
-
-                ////var emailResult = await _emailService.Send(emailMetadata);
-                //if (emailResult.Success)
-                //{
-                //    _notyf.Success("Confirmation email sent successfully.");
-                //}
-                //else
-                //{
-                //    _notyf.Error("Failed to send confirmation email.");
-                //}
-            }
-            else
-            {
-                _notyf.Error("Failed to clear the cart.");
-            }
-
+            _notyf.Success("Your inquiry has been successfully submitted.");
             return View();
         }
 

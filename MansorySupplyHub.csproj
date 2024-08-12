@@ -21,8 +21,6 @@
     <Compile Remove="Controllers\ApplicationTypeController.cs" />
     <Compile Remove="Data\ContextSeeder.cs" />
     <Compile Remove="Data\DbInitializerExtension.cs" />
-    <Compile Remove="Dto\MailRequests.cs" />
-    <Compile Remove="Entities\EmailConfiguration.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -45,7 +43,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Ark.Tools.AspNetCore.Swashbuckle" Version="5.1.0" />
     <PackageReference Include="AspNetCoreHero.ToastNotification" Version="1.1.0" />
+    <PackageReference Include="AutoMapper" Version="13.0.1" />
     <PackageReference Include="FluentEmail.Core" Version="3.0.2" />
     <PackageReference Include="FluentEmail.RazorTemplates" Version="2.7.2" />
     <PackageReference Include="FluentEmail.Smtp" Version="3.0.2" />
@@ -58,6 +58,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.3" />
     <PackageReference Include="MimeKit" Version="4.7.1" />
+    <PackageReference Include="NETCore.MailKit" Version="2.1.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.2" />
     <PackageReference Include="System.Security.Claims" Version="4.3.0" />
   </ItemGroup>
@@ -65,5 +66,10 @@
   <ItemGroup>
     <Folder Include="wwwroot\Image\Product\" />
   </ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="MailKit" Version="4.7.1.1" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+	</ItemGroup>
 
 </Project>
