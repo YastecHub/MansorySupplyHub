@@ -51,6 +51,8 @@ builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IInquiryHeaderService, InquiryHeaderService>();
 builder.Services.AddScoped<IInquiryDetailService, InquiryDetailService>();
+builder.Services.AddScoped<IOrderHeaderService, OrderHeaderService>();
+builder.Services.AddScoped<IOrderDetailService, OrderDetailService>();
 
 builder.Services.AddSession(options =>
 {

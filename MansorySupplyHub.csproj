@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <Compile Remove="Controllers\ApplicationTypeController.cs" />
+    <Compile Remove="Controllers\EmailController.cs" />
     <Compile Remove="Data\ContextSeeder.cs" />
     <Compile Remove="Data\DbInitializerExtension.cs" />
   </ItemGroup>
