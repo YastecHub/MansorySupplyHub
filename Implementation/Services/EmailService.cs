@@ -143,6 +143,5 @@ namespace MansorySupplyHub.Implementation.Services
             }
         }
 
-
     }
 }

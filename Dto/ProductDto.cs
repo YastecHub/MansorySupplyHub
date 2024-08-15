@@ -17,8 +17,6 @@ namespace MansorySupplyHub.Dto
         public double Price { get; set; }
         public string Image { get; set; }
 
-
-
         [Display(Name = "CategoryType")]
         public int CategoryId { get; set; }
 

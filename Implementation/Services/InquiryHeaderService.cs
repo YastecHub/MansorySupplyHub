@@ -11,11 +11,13 @@ namespace MansorySupplyHub.Implementation.Services
     {
         private readonly ApplicationDbContext _dbcontext;
         private readonly ILogger<InquiryHeaderService> _logger;
+        private readonly IEmailService _emailService;
 
-        public InquiryHeaderService(ApplicationDbContext dbcontext, ILogger<InquiryHeaderService> logger)
+        public InquiryHeaderService(ApplicationDbContext dbcontext, ILogger<InquiryHeaderService> logger, IEmailService emailService)
         {
             _dbcontext = dbcontext;
             _logger = logger;
+            _emailService = emailService;
         }
 
         public async Task<ResponseModel<InquiryHeaderDto>> CreateInquiryHeader(CreateInquiryHeaderDto request)
@@ -55,6 +57,16 @@ namespace MansorySupplyHub.Implementation.Services
 
                 _dbcontext.InquiryHeaders.Add(inquiryHeader);
                 await _dbcontext.SaveChangesAsync();
+
+                ////sending Email
+                //var profile = new Profile
+                //{
+                //    Email = request.Email,
+                //    FirstName = request.FullName
+                //};
+
+                //await _emailService.SendNotificationToUserAsync(profile);
+
 
                 _logger.LogInformation("Inquiry header created successfully with ID: {InquiryHeaderId}", inquiryHeader.Id);
 

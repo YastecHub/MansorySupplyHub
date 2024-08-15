@@ -13,12 +13,14 @@ namespace MansorySupplyHub.Implementation.Services
         private readonly ApplicationDbContext _dbContext;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<CartService> _logger;
+        private readonly IEmailService _emailService;
 
-        public CartService(ApplicationDbContext dbContext, IHttpContextAccessor httpContextAccessor, ILogger<CartService> logger)
+        public CartService(ApplicationDbContext dbContext, IHttpContextAccessor httpContextAccessor, ILogger<CartService> logger, IEmailService emailService)
         {
             _dbContext = dbContext;
             _httpContextAccessor = httpContextAccessor;
             _logger = logger;
+            _emailService = emailService;
         }
 
         public async Task<ResponseModel<List<ProductDto>>> GetProductsInCart(List<int> productIds)

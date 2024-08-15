@@ -9,29 +9,25 @@ using System.Security.Claims;
 
 namespace MansorySupplyHub.Controllers
 {
-    [Authorize]
     public class CartController : Controller
     {
         private readonly ICartService _cartService;
         private readonly IInquiryHeaderService _inqHService;
         private readonly IInquiryDetailService _inqDService;
-        private readonly IOrderHeaderService _orderHService;
-        private readonly IOrderDetailService _orderDService;
         private readonly INotyfService _notyf;
         private readonly IEmailService _emailService;
 
-        public CartController(ICartService cartService, IInquiryHeaderService inqHService, IInquiryDetailService inqDService, IOrderHeaderService orderHService, IOrderDetailService orderDService, INotyfService notyf, IEmailService emailService)
+        public CartController(ICartService cartService, IInquiryHeaderService inqHService, IInquiryDetailService inqDService, INotyfService notyf, IEmailService emailService)
         {
             _cartService = cartService;
             _inqHService = inqHService;
             _inqDService = inqDService;
-            _orderHService = orderHService;
-            _orderDService = orderDService;
             _notyf = notyf;
             _emailService = emailService;
         }
 
         [HttpGet("cart-items")]
+        [ActionName("Index")]
         public async Task<IActionResult> Index()
         {
             var shoppingCartSession = HttpContext.Session.Get<IEnumerable<ShoppingCart>>(WC.SessionCart);
@@ -62,10 +58,10 @@ namespace MansorySupplyHub.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ActionName("Index")]
-        public IActionResult IndexPost(IEnumerable<ProductDto> ProdList)
+        public IActionResult IndexPost(IEnumerable<Product> ProdList)
         {
             List<ShoppingCart> shoppingCartList = new List<ShoppingCart>();
-            foreach (ProductDto prod in ProdList)
+            foreach (Product prod in ProdList)
             {
                 shoppingCartList.Add(new ShoppingCart { ProductId = prod.Id, Sqft = prod.TempSqft });
             }
@@ -130,115 +126,66 @@ namespace MansorySupplyHub.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            if (User.IsInRole(WC.AdminRole))
+            var inquiryHeader = new CreateInquiryHeaderDto
             {
-                // Create an order
-                var orderHeaderDto = new CreateOrderHeaderDto
+                ApplicationUserId = userId,
+                InquiryDate = DateTime.Now,
+                FullName = productUserDto.ApplicationUser.FullName,
+                PhoneNumber = productUserDto.ApplicationUser.PhoneNumber,
+                Email = productUserDto.ApplicationUser.Email
+            };
+
+            var inquiryHeaderResponse = await _inqHService.CreateInquiryHeader(inquiryHeader);
+            if (!inquiryHeaderResponse.Success)
+            {
+                _notyf.Error("Failed to create inquiry header.");
+                return RedirectToAction(nameof(Summary));
+            }
+
+            var inquiryHeaderId = inquiryHeaderResponse.Data.Id;
+
+            foreach (var cartItem in shoppingCartList)
+            {
+                var inquiryDetail = new CreateInquiryDetailDto
                 {
-                    CreatedByUserId = userId,
-                    FinalOrderTotal = productUserDto.ProductList.Sum(p => p.TempSqft * p.Price),
-                    FullName = productUserDto.ApplicationUser.FullName,
-                    PhoneNumber = productUserDto.ApplicationUser.PhoneNumber,
-                    Email = productUserDto.ApplicationUser.Email,
-                    StreetAddress = productUserDto.ApplicationUser.StreetAddress,
-                    City = productUserDto.ApplicationUser.City,
-                    State = productUserDto.ApplicationUser.State,
-                    PostalCode = productUserDto.ApplicationUser.PostalCode,
-                    OrderDate = DateTime.Now,
-                    OrderStatus = WC.StatusPending
+                    InquiryHeaderId = inquiryHeaderId,
+                    ProductId = cartItem.ProductId,
+                    Sqft = cartItem.Sqft
                 };
 
-                var orderHeaderResponse = await _orderHService.CreateOrderHeader(orderHeaderDto);
-                if (!orderHeaderResponse.Success)
+                var inquiryDetailResponse = await _inqDService.CreateInquiryDetail(inquiryDetail);
+                if (!inquiryDetailResponse.Success)
                 {
-                    _notyf.Error("Failed to create order.");
+                    _notyf.Error("Failed to create inquiry detail.");
                     return RedirectToAction(nameof(Summary));
                 }
+            }
 
-                foreach (var cartItem in shoppingCartList)
-                {
-                    var orderDetailDto = new CreateOrderDetailDto
-                    {
-                        OrderHeaderId = orderHeaderResponse.Data.Id,
-                        ProductId = cartItem.ProductId,
-                        Sqft = cartItem.Sqft,
-                        PricePerSqFt = productUserDto.ProductList.First(p => p.Id == cartItem.ProductId).Price
-                    };
+            // Send email confirmation
+            var profile = new Profile
+            {
+                FirstName = productUserDto.ApplicationUser.FullName,
+                Email = productUserDto.ApplicationUser.Email
+            };
 
-                    var orderDetailResponse = await _orderDService.CreateOrderDetail(orderDetailDto);
-                    if (!orderDetailResponse.Success)
-                    {
-                        _notyf.Error("Failed to create order detail.");
-                        return RedirectToAction(nameof(Summary));
-                    }
-                }
-
-                return RedirectToAction(nameof(InquiryConfirmation), new { id = orderHeaderResponse.Data.Id });
+            var emailResponse = await _emailService.SendNotificationToUserAsync(profile);
+            if (emailResponse.Success)
+            {
+                _notyf.Success("Inquiry submitted successfully. A confirmation email has been sent.");
             }
             else
             {
-                // Create an inquiry
-                var inquiryHeaderDto = new CreateInquiryHeaderDto
-                {
-                    ApplicationUserId = userId,
-                    InquiryDate = DateTime.Now,
-                    FullName = productUserDto.ApplicationUser.FullName,
-                    PhoneNumber = productUserDto.ApplicationUser.PhoneNumber,
-                    Email = productUserDto.ApplicationUser.Email
-                };
-
-                var inquiryHeaderResponse = await _inqHService.CreateInquiryHeader(inquiryHeaderDto);
-                if (!inquiryHeaderResponse.Success)
-                {
-                    _notyf.Error("Failed to create inquiry header.");
-                    return RedirectToAction(nameof(Summary));
-                }
-
-                var inquiryHeaderId = inquiryHeaderResponse.Data.Id;
-
-                foreach (var cartItem in shoppingCartList)
-                {
-                    var inquiryDetailDto = new CreateInquiryDetailDto
-                    {
-                        InquiryHeaderId = inquiryHeaderId,
-                        ProductId = cartItem.ProductId,
-                        Sqft = cartItem.Sqft
-                    };
-
-                    var inquiryDetailResponse = await _inqDService.CreateInquiryDetail(inquiryDetailDto);
-                    if (!inquiryDetailResponse.Success)
-                    {
-                        _notyf.Error("Failed to create inquiry detail.");
-                        return RedirectToAction(nameof(Summary));
-                    }
-                }
-
-                // Send email confirmation
-                var profile = new Profile
-                {
-                    FirstName = productUserDto.ApplicationUser.FullName,
-                    Email = productUserDto.ApplicationUser.Email
-                };
-
-                var emailResponse = await _emailService.SendNotificationToUserAsync(profile);
-                if (emailResponse.Success)
-                {
-                    _notyf.Success("Inquiry submitted successfully. A confirmation email has been sent.");
-                }
-                else
-                {
-                    _notyf.Warning("Inquiry submitted, but the confirmation email could not be sent.");
-                }
-
-                HttpContext.Session.Clear();
-                return RedirectToAction(nameof(InquiryConfirmation));
+                _notyf.Warning("Inquiry submitted, but the confirmation email could not be sent.");
             }
+
+            HttpContext.Session.Clear();
+            return RedirectToAction(nameof(InquiryConfirmation));
         }
 
         [HttpGet("cart-confirmation")]
         public async Task<IActionResult> InquiryConfirmation()
         {
-            _notyf.Success("Your inquiry has been successfully submitted.");
+            //_notyf.Success("Your inquiry has been successfully submitted.");
             return View();
         }
 

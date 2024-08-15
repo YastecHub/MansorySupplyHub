@@ -11,11 +11,13 @@ namespace MansorySupplyHub.Implementation.Services
     {
         private readonly ApplicationDbContext _dbcontext;
         private readonly ILogger<InquiryDetailService> _logger;
+        private readonly IEmailService _emailService;
 
-        public InquiryDetailService(ApplicationDbContext dbcontext, ILogger<InquiryDetailService> logger)
+        public InquiryDetailService(ApplicationDbContext dbcontext, ILogger<InquiryDetailService> logger, IEmailService emailService)
         {
             _dbcontext = dbcontext;
             _logger = logger;
+            _emailService = emailService;
         }
 
         public async Task<ResponseModel<InquiryDetailDto>> CreateInquiryDetail(CreateInquiryDetailDto request)
@@ -32,6 +34,19 @@ namespace MansorySupplyHub.Implementation.Services
 
                 _dbcontext.InquiryDetails.Add(inquiryDetail);
                 await _dbcontext.SaveChangesAsync();
+
+                ////Sendinding Email
+                //var inquiryHeader = await _dbcontext.InquiryHeaders.FindAsync(request.InquiryHeaderId);
+                //if (inquiryHeader != null)
+                //{
+                //    var profile = new Profile
+                //    {
+                //        Email = inquiryHeader.Email,
+                //        FirstName = inquiryHeader.FullName 
+                //    };
+
+                //    await _emailService.SendNotificationToUserAsync(profile);
+                //}
 
                 var inquiryDetailDto = new InquiryDetailDto
                 {

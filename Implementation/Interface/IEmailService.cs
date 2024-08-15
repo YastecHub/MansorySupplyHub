@@ -10,5 +10,6 @@ namespace MansorySupplyHub.Implementation.Interface
         Task<BaseResponse<MailRecieverDto>> SendNotificationToUserAsync(Profile profile);
         Task<bool> SendEmailAsync(MailRecieverDto model, MailRequests request);
 
+
     }
 }
