@@ -1,5 +1,6 @@
 ﻿@using MansorySupplyHub.Areas.Identity.Pages.Account.Manage
-@inject SignInManager<IdentityUser> SignInManager
+@using MansorySupplyHub.Entities
+@inject SignInManager<ApplicationUser> SignInManager
 @{
     var hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
 }

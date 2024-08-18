@@ -15,6 +15,8 @@ namespace MansorySupplyHub.Dto
 
         [Range(1, int.MaxValue)]
         public double Price { get; set; }
+        public double TotalPrice { get; set; }
+
         public string Image { get; set; }
 
         [Display(Name = "CategoryType")]

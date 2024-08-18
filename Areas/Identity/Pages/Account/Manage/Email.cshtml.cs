@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text;
 using System.Text.Encodings.Web;
+using MansorySupplyHub.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -11,13 +12,13 @@ namespace MansorySupplyHub.Areas.Identity.Pages.Account.Manage
 {
     public partial class EmailModel : PageModel
     {
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IEmailSender _emailSender;
 
         public EmailModel(
-            UserManager<IdentityUser> userManager,
-            SignInManager<IdentityUser> signInManager,
+            UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager,
             IEmailSender emailSender)
         {
             _userManager = userManager;
@@ -26,9 +27,7 @@ namespace MansorySupplyHub.Areas.Identity.Pages.Account.Manage
         }
 
         public string Username { get; set; }
-
         public string Email { get; set; }
-
         public bool IsEmailConfirmed { get; set; }
 
         [TempData]
@@ -45,16 +44,10 @@ namespace MansorySupplyHub.Areas.Identity.Pages.Account.Manage
             public string NewEmail { get; set; }
         }
 
-        private async Task LoadAsync(IdentityUser user)
+        private async Task LoadAsync(ApplicationUser user)
         {
-            var email = await _userManager.GetEmailAsync(user);
-            Email = email;
-
-            Input = new InputModel
-            {
-                NewEmail = email,
-            };
-
+            Email = await _userManager.GetEmailAsync(user);
+            Input = new InputModel { NewEmail = Email };
             IsEmailConfirmed = await _userManager.IsEmailConfirmedAsync(user);
         }
 
@@ -80,7 +73,6 @@ namespace MansorySupplyHub.Areas.Identity.Pages.Account.Manage
 
             if (!ModelState.IsValid)
             {
-                await LoadAsync(user);
                 return Page();
             }
 
@@ -89,6 +81,7 @@ namespace MansorySupplyHub.Areas.Identity.Pages.Account.Manage
             {
                 var userId = await _userManager.GetUserIdAsync(user);
                 var code = await _userManager.GenerateChangeEmailTokenAsync(user, Input.NewEmail);
+                code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
                 var callbackUrl = Url.Page(
                     "/Account/ConfirmEmailChange",
                     pageHandler: null,
@@ -117,7 +110,6 @@ namespace MansorySupplyHub.Areas.Identity.Pages.Account.Manage
 
             if (!ModelState.IsValid)
             {
-                await LoadAsync(user);
                 return Page();
             }
 

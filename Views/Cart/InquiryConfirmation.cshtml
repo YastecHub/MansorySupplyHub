@@ -1,8 +1,19 @@
-﻿<div class="text-center">
+﻿@{
+    var isOrder = ViewBag.IsOrder as bool?;
+    var id = ViewBag.Id as int?;
+}
 
-    <h1 class="text-info">Inquiry Confirmation</h1>
+<div class="text-center">
+    @if (isOrder == true)
+    {
+            <h1 class="text-info">Order Created</h1>
+            <p>Order #@id has been created successfully!</p>
+    }
+    else
+    {
+            <h1 class="text-info">Inquiry Confirmation</h1>
+            <p>We have received your inquiry and someone from our team will contact you shortly!</p>
+    }
 
-    <p>We have recieved your inquiry and someone from our team will contact you shortly!</p>
-
-    <img src="~/Image/patio.jpg" width="80%" />
+    <img src="/Image/patio.jpg" width="80%" />
 </div>

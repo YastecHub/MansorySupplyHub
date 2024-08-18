@@ -38,8 +38,10 @@ namespace MansorySupplyHub.Dto
         public string Email { get; set; }
     }
 
-    public class CreateOrderHeaderDto
+    public class CreateOrderHeaderDto : BaseEntity
     {
+        [Required]
+        public string ApplicationUserId { get; set; }
         [Required]
         public string CreatedByUserId { get; set; }
 
