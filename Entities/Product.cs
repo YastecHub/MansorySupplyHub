@@ -20,7 +20,7 @@ namespace MansorySupplyHub.Entities
         public ApplicationType ApplicationType { get; set; }
 
         [NotMapped]
-        [Range(1, 100000)]
+        [Range(1, 100000, ErrorMessage ="Sqft must be greater than 0.")]
         public int TempSqft { get; set; }
 
 

@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using MansorySupplyHub.Dto;
 using MansorySupplyHub.Implementation.Interface;
 using MansorySupplyHub.Models;
+using System.Transactions;
+using Braintree;
+using MansorySupplyHub.BrainTree;
 
 namespace MansorySupplyHub.Controllers
 {
@@ -11,14 +14,16 @@ namespace MansorySupplyHub.Controllers
     {
         private readonly IOrderHeaderService _orderHeaderService;
         private readonly IOrderDetailService _orderDetailService;
+        private readonly IBrainTreeGate brainTreeGate;
 
         [BindProperty]
         public OrderVM OrderVM { get; set; }
 
-        public OrderController(IOrderHeaderService orderHeaderService, IOrderDetailService orderDetailService)
+        public OrderController(IOrderHeaderService orderHeaderService, IOrderDetailService orderDetailService, IBrainTreeGate _brainTreeGate)
         {
             _orderHeaderService = orderHeaderService;
             _orderDetailService = orderDetailService;
+            _brainTreeGate = brainTreeGate;
         }
 
         public async Task<IActionResult> Index(string searchName = null, string searchEmail = null, string searchPhone = null, string status = null)
@@ -165,6 +170,18 @@ namespace MansorySupplyHub.Controllers
         [HttpPost]
         public async Task<IActionResult> CancelOrder()
         {
+            //var gateway = _brainTreeGate.GetGateway();
+            //Transaction transaction = gateway.Transaction.Find(OrderHeaderDto.TransactionId);
+            //if (transaction.Status == TransactionStatus.AUTHORIZED || transaction.Status == TransactionStatus.SUBMITTED_FOR_SETTLEMENT)
+            //{
+            //    //no refund
+            //    Result<Transaction> resultvoid = gateway.Transaction.Void(orderHeader.TransactionId);
+            //}
+            //else
+            //{
+            //    //refund
+            //    Result<Transaction> resultRefund = gateway.Transaction.Refund(orderHeader.TransactionId);
+            //}
             var response = await _orderHeaderService.GetOrderHeaderDetails(OrderVM.OrderHeader.Id);
             if (!response.Success)
             {

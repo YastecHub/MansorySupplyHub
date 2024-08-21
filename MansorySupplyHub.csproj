@@ -8,12 +8,16 @@
 
   <ItemGroup>
     <Compile Remove="Enum\**" />
+    <Compile Remove="Initializer\**" />
     <Compile Remove="Models\ViewModel\**" />
     <Content Remove="Enum\**" />
+    <Content Remove="Initializer\**" />
     <Content Remove="Models\ViewModel\**" />
     <EmbeddedResource Remove="Enum\**" />
+    <EmbeddedResource Remove="Initializer\**" />
     <EmbeddedResource Remove="Models\ViewModel\**" />
     <None Remove="Enum\**" />
+    <None Remove="Initializer\**" />
     <None Remove="Models\ViewModel\**" />
   </ItemGroup>
 
@@ -61,10 +65,11 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.3" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.4" />
     <PackageReference Include="MimeKit" Version="4.7.1" />
     <PackageReference Include="NETCore.MailKit" Version="2.1.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.2" />
+    <PackageReference Include="Syncfusion.EJ2.AspNet.Core" Version="26.2.10" />
     <PackageReference Include="System.Security.Claims" Version="4.3.0" />
   </ItemGroup>
 

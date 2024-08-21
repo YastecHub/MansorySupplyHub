@@ -10,6 +10,7 @@ using Serilog;
 using MansorySupplyHub.Extensions;
 using MansorySupplyHub.BrainTree;
 using Microsoft.Extensions.Options;
+using FluentAssertions.Common;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,10 +46,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders()
-   .AddDefaultUI(); // Add Default UI for Identity
-
-builder.Services.AddScoped<SignInManager<ApplicationUser>>(); // Ensure SignInManager is available
-
+   .AddDefaultUI();
+builder.Services.AddScoped<SignInManager<ApplicationUser>>();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
