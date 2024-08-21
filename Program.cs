@@ -68,8 +68,8 @@ builder.Services.AddScoped<IOrderDetailService, OrderDetailService>();
 builder.Services.AddAuthentication().AddFacebook(
     options =>
     {
-        options.AppId = "1274985050575615";
-        options.AppSecret = "424fa38787927b4814b878c6c3a15fe7";
+        options.AppId = "1069967337885900";
+        options.AppSecret = "0745f0b42cbc3d1d2ded9042a94ba0eb";
     });
 
 builder.Services.AddSession(options =>
