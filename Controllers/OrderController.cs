@@ -14,12 +14,12 @@ namespace MansorySupplyHub.Controllers
     {
         private readonly IOrderHeaderService _orderHeaderService;
         private readonly IOrderDetailService _orderDetailService;
-        private readonly IBrainTreeGate brainTreeGate;
+        private readonly IBrainTreeGate _brainTreeGate;
 
         [BindProperty]
         public OrderVM OrderVM { get; set; }
 
-        public OrderController(IOrderHeaderService orderHeaderService, IOrderDetailService orderDetailService, IBrainTreeGate _brainTreeGate)
+        public OrderController(IOrderHeaderService orderHeaderService, IOrderDetailService orderDetailService, IBrainTreeGate brainTreeGate)
         {
             _orderHeaderService = orderHeaderService;
             _orderDetailService = orderDetailService;

@@ -337,5 +337,123 @@ namespace MansorySupplyHub.Implementation.Services
                 _logger.LogDebug("GetApplicationTypeSelectList method execution completed.");
             }
         }
+
+        public async Task<ResponseModel<ProductDto>> UpsertProduct(ProductDto productDto, IFormFileCollection files, string webRootPath)
+        {
+            try
+            {
+                var response = new ResponseModel<ProductDto>();
+                string upload = Path.Combine(webRootPath, WC.ImagePath);
+                if (!Directory.Exists(upload))
+                {
+                    Directory.CreateDirectory(upload);
+                }
+                string fileName = Guid.NewGuid().ToString();
+
+                if (productDto.Id == 0)
+                {
+                    // Creating
+                    if (files.Count > 0)
+                    {
+                        string extension = Path.GetExtension(files[0].FileName);
+                        string fullPath = Path.Combine(upload, fileName + extension);
+                        using (var fileStream = new FileStream(fullPath, FileMode.Create))
+                        {
+                            await files[0].CopyToAsync(fileStream);
+                        }
+                        productDto.Image = fileName + extension;
+                    }
+
+                    var createProductDto = new CreateProductDto
+                    {
+                        Name = productDto.Name,
+                        Description = productDto.Description,
+                        Price = productDto.Price,
+                        Image = productDto.Image,
+                        ApplicationType = productDto.ApplicationType,
+                        Category = productDto.Category,
+                        CategoryId = productDto.CategoryId,
+                        ApplicationTypeId = productDto.ApplicationTypeId,
+                    };
+
+                    response = await CreateProduct(createProductDto);
+                }
+                else
+                {
+                    // Updating
+                    var objFromDb = await GetProductDetails(productDto.Id);
+                    if (!objFromDb.Success)
+                    {
+                        response.Success = false;
+                        response.Message = "Product not found";
+                        return response;
+                    }
+
+                    if (files.Count > 0)
+                    {
+                        var oldFilePath = Path.Combine(upload, objFromDb.Data.Image);
+                        if (System.IO.File.Exists(oldFilePath))
+                        {
+                            System.IO.File.Delete(oldFilePath);
+                        }
+                        string extension = Path.GetExtension(files[0].FileName);
+                        string fullPath = Path.Combine(upload, fileName + extension);
+                        using (var fileStream = new FileStream(fullPath, FileMode.Create))
+                        {
+                            await files[0].CopyToAsync(fileStream);
+                        }
+                        productDto.Image = fileName + extension;
+                    }
+                    else
+                    {
+                        productDto.Image = objFromDb.Data.Image;
+                    }
+
+                    var updateProductDto = new UpdateProductDto
+                    {
+                        Id = productDto.Id,
+                        Name = productDto.Name,
+                        Description = productDto.Description,
+                        Price = productDto.Price,
+                        Image = productDto.Image,
+                        Category = productDto.Category,
+                        ApplicationType = productDto.ApplicationType,
+                        CategoryId = productDto.CategoryId,
+                        ApplicationTypeId = productDto.ApplicationTypeId,
+                    };
+
+                    response = await EditProduct(updateProductDto, productDto.Id);
+                }
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while Creating the product");
+                return new ResponseModel<ProductDto>
+                {
+                    Success = false,
+                    Message = "An error occurred while processing the request."
+                };
+            }
+        }
+
+        public async Task<ResponseModel<ProductDto>> GetProductForUpsert(int? id)
+        {
+            if (id == null)
+            {
+                return new ResponseModel<ProductDto>
+                {
+                    Data = new ProductDto(),
+                    Success = true,
+                    Message = "New product creation"
+                };
+            }
+            else
+            {
+                var response = await GetProductDetails(id.Value);
+                return response;
+            }
+        }
     }
 }

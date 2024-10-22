@@ -11,8 +11,9 @@ namespace MansorySupplyHub.Implementation.Interface
         Task<ResponseModel<bool>> DeleteProduct(int id);
         Task<ResponseModel<List<ProductDto>>> GetAllProducts();
         Task<ResponseModel<ProductDto>> GetProductDetails(int id);
+        Task<ResponseModel<ProductDto>> GetProductForUpsert(int? id);
+        Task<ResponseModel<ProductDto>> UpsertProduct(ProductDto productDto, IFormFileCollection files, string webRootPath);
         Task<IEnumerable<SelectListItem>> GetCategorySelectList();
         Task<IEnumerable<SelectListItem>> GetApplicationTypeSelectList();
-
     }
 }
