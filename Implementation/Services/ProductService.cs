@@ -340,23 +340,39 @@ namespace MansorySupplyHub.Implementation.Services
 
         public async Task<ResponseModel<ProductDto>> UpsertProduct(ProductDto productDto, IFormFileCollection files, string webRootPath)
         {
+            var response = new ResponseModel<ProductDto>();
+
+            // Ensure WC.ImagePath is relative (e.g., "Image/Product")
+            string relativeImagePath = WC.ImagePath.TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            string uploadPath = Path.Combine(webRootPath, relativeImagePath); // Combines web root with relative image path
+
+            _logger.LogInformation($"Web root path: {webRootPath}");
+            _logger.LogInformation($"Upload path: {uploadPath}");
+
             try
             {
-                var response = new ResponseModel<ProductDto>();
-                string upload = Path.Combine(webRootPath, WC.ImagePath);
-                if (!Directory.Exists(upload))
+                // Ensure the upload directory exists
+                if (!Directory.Exists(uploadPath))
                 {
-                    Directory.CreateDirectory(upload);
+                    _logger.LogInformation($"Directory does not exist. Creating directory at: {uploadPath}");
+                    Directory.CreateDirectory(uploadPath);
                 }
+
                 string fileName = Guid.NewGuid().ToString();
 
+                // If the product ID is 0, we are creating a new product
                 if (productDto.Id == 0)
                 {
-                    // Creating
+                    _logger.LogInformation("Creating a new product.");
+
+                    // Handle file upload if a file is provided
                     if (files.Count > 0)
                     {
                         string extension = Path.GetExtension(files[0].FileName);
-                        string fullPath = Path.Combine(upload, fileName + extension);
+                        string fullPath = Path.Combine(uploadPath, fileName + extension);
+
+                        _logger.LogInformation($"Saving new file with filename: {fileName + extension} at {fullPath}");
+
                         using (var fileStream = new FileStream(fullPath, FileMode.Create))
                         {
                             await files[0].CopyToAsync(fileStream);
@@ -376,28 +392,41 @@ namespace MansorySupplyHub.Implementation.Services
                         ApplicationTypeId = productDto.ApplicationTypeId,
                     };
 
+                    _logger.LogInformation("Calling CreateProduct method to add new product.");
                     response = await CreateProduct(createProductDto);
                 }
-                else
+                else // Updating an existing product
                 {
-                    // Updating
+                    _logger.LogInformation($"Updating product with ID: {productDto.Id}");
+
                     var objFromDb = await GetProductDetails(productDto.Id);
                     if (!objFromDb.Success)
                     {
-                        response.Success = false;
-                        response.Message = "Product not found";
-                        return response;
+                        _logger.LogWarning($"Product with ID {productDto.Id} not found.");
+                        return new ResponseModel<ProductDto>
+                        {
+                            Success = false,
+                            Message = "Product not found"
+                        };
                     }
 
+                    // Handle file upload if a new file is provided
                     if (files.Count > 0)
                     {
-                        var oldFilePath = Path.Combine(upload, objFromDb.Data.Image);
+                        _logger.LogInformation("New file detected for update.");
+
+                        var oldFilePath = Path.Combine(uploadPath, objFromDb.Data.Image);
                         if (System.IO.File.Exists(oldFilePath))
                         {
+                            _logger.LogInformation($"Deleting old file at: {oldFilePath}");
                             System.IO.File.Delete(oldFilePath);
                         }
+
                         string extension = Path.GetExtension(files[0].FileName);
-                        string fullPath = Path.Combine(upload, fileName + extension);
+                        string fullPath = Path.Combine(uploadPath, fileName + extension);
+
+                        _logger.LogInformation($"Saving updated file with filename: {fileName + extension} at {fullPath}");
+
                         using (var fileStream = new FileStream(fullPath, FileMode.Create))
                         {
                             await files[0].CopyToAsync(fileStream);
@@ -406,7 +435,9 @@ namespace MansorySupplyHub.Implementation.Services
                     }
                     else
                     {
+                        // No new file uploaded, keep the old image
                         productDto.Image = objFromDb.Data.Image;
+                        _logger.LogInformation("No new file uploaded. Keeping the old image.");
                     }
 
                     var updateProductDto = new UpdateProductDto
@@ -422,14 +453,16 @@ namespace MansorySupplyHub.Implementation.Services
                         ApplicationTypeId = productDto.ApplicationTypeId,
                     };
 
+                    _logger.LogInformation("Calling EditProduct method to update product.");
                     response = await EditProduct(updateProductDto, productDto.Id);
                 }
 
+                _logger.LogInformation("Product upsert successful.");
                 return response;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while Creating the product");
+                _logger.LogError(ex, $"An error occurred while upserting the product with ID: {productDto.Id}");
                 return new ResponseModel<ProductDto>
                 {
                     Success = false,
@@ -437,6 +470,7 @@ namespace MansorySupplyHub.Implementation.Services
                 };
             }
         }
+
 
         public async Task<ResponseModel<ProductDto>> GetProductForUpsert(int? id)
         {

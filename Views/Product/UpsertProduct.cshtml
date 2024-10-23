@@ -53,7 +53,7 @@
                 <div class="form-group row py-2">
                     <div class="col-4">Image</div>
                     <div class="col-8">
-                        <input type="file" name="file" id="UploadBox" multiple class="form-control" />
+                        <input type="file" name="files" id="UploadBox" multiple class="form-control" />
                     </div>
                 </div>
 
@@ -68,7 +68,6 @@
                         <span asp-validation-for="CategoryId" class="text-danger"></span>
                     </div>
                 </div>
-
 
                 <br />
 
@@ -89,12 +88,12 @@
                         <div class="col">
                             @if (Model.Id != 0)
                             {
-                                       //update
+                                // Update
                                 <input type="submit" class="btn btn-info w-100" value="Update" />
                             }
                             else
                             {
-                                         //create
+                                   // Create
                                 <input type="submit" onclick="return validateInput()" class="btn btn-primary w-100" value="Create" />
                             }
                         </div>
@@ -104,21 +103,20 @@
                     </div>
                 </div>
             </div>
-
             <div class="col-4">
-
-                @if (Model.Id != 0)
+                @if (Model.Id != 0 && !string.IsNullOrEmpty(Model.Image))
                 {
-                    <img src="@WC.ImagePath@Model.Image"width="100%" style="border-radius:5px; border:1px solid #bbb" />
+                    <img src="@Url.Content($"{WC.ImagePath}{Model.Image}")"
+                         width="100%"
+                         style="border-radius:5px; border:1px solid #bbb"
+                         alt="Product Image" />
                 }
             </div>
         </div>
     </div>
 </form>
 
-
 @section Scripts {
-
     @{
         <partial name="_ValidationScriptsPartial" />
     }
@@ -136,4 +134,3 @@
         }
     </script>
 }
-
