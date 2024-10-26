@@ -1,4 +1,6 @@
-﻿using MansorySupplyHub.Data;
+﻿using Braintree;
+using MansorySupplyHub.BrainTree;
+using MansorySupplyHub.Data;
 using MansorySupplyHub.Dto;
 using MansorySupplyHub.Entities;
 using MansorySupplyHub.Implementation.Interface;
@@ -11,12 +13,49 @@ namespace MansorySupplyHub.Implementation.Services
     {
         private readonly ApplicationDbContext _dbContext;
         private readonly ILogger<OrderHeaderService> _logger;
+        private readonly IBrainTreeGate _brainTreeGat;
 
-        public OrderHeaderService(ApplicationDbContext dbContext, ILogger<OrderHeaderService> logger)
+        public OrderHeaderService(ApplicationDbContext dbContext, ILogger<OrderHeaderService> logger, IBrainTreeGate brainTreeGat)
         {
             _dbContext = dbContext;
             _logger = logger;
+            _brainTreeGat = brainTreeGat;
         }
+
+
+        public async Task<ResponseModel<IEnumerable<OrderHeaderDto>>> FilterOrderHeadersAsync(IEnumerable<OrderHeaderDto> orders,
+                                                                                          string searchName = null,
+                                                                                          string searchEmail = null,
+                                                                                          string searchPhone = null,
+                                                                                          string status = null)
+        {
+            var filteredOrders = orders.AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchName))
+            {
+                filteredOrders = filteredOrders.Where(u => u.FullName.Contains(searchName, StringComparison.OrdinalIgnoreCase));
+            }
+            if (!string.IsNullOrEmpty(searchEmail))
+            {
+                filteredOrders = filteredOrders.Where(u => u.Email.Contains(searchEmail, StringComparison.OrdinalIgnoreCase));
+            }
+            if (!string.IsNullOrEmpty(searchPhone))
+            {
+                filteredOrders = filteredOrders.Where(u => u.PhoneNumber.Contains(searchPhone, StringComparison.OrdinalIgnoreCase));
+            }
+            if (!string.IsNullOrEmpty(status) && status != "--Order Status--")
+            {
+                filteredOrders = filteredOrders.Where(u => u.OrderStatus.Equals(status, StringComparison.OrdinalIgnoreCase));
+            }
+
+
+            return new ResponseModel<IEnumerable<OrderHeaderDto>>
+            {
+                Success = true,
+                Data = await Task.FromResult(filteredOrders.ToList())
+            };
+        }
+
 
         public async Task<ResponseModel<OrderHeaderDto>> CreateOrderHeader(CreateOrderHeaderDto request)
         {
@@ -260,7 +299,7 @@ namespace MansorySupplyHub.Implementation.Services
                 _logger.LogInformation("Retrieving order header details for order header: {OrderHeaderId}", id);
 
                 var orderHeader = await _dbContext.OrderHeaders
-                    .Include(header => header.OrderDetails) 
+                    .Include(header => header.OrderDetails)
                     .FirstOrDefaultAsync(header => header.Id == id);
 
                 if (orderHeader == null)
@@ -313,5 +352,304 @@ namespace MansorySupplyHub.Implementation.Services
                 };
             }
         }
+
+
+        public async Task<ResponseModel<bool>> StartProcessingOrder(int orderId)
+        {
+            try
+            {
+                _logger.LogInformation("Starting processing for order header: {OrderHeaderId}", orderId);
+
+                var response = await GetOrderHeaderDetails(orderId);
+                if (!response.Success || response.Data == null)
+                {
+                    return new ResponseModel<bool>
+                    {
+                        Success = false,
+                        Data = false,
+                        Message = "Order header not found."
+                    };
+                }
+
+                var orderHeader = response.Data;
+                orderHeader.OrderStatus = WC.StatusInProcess;
+
+                var updateResponse = await EditOrderHeader(new UpdateOrderHeaderDto
+                {
+                    CreatedByUserId = orderHeader.CreatedByUserId,
+                    OrderDate = orderHeader.OrderDate,
+                    ShippingDate = orderHeader.ShippingDate,
+                    FinalOrderTotal = orderHeader.FinalOrderTotal,
+                    OrderStatus = orderHeader.OrderStatus,
+                    PaymentDate = orderHeader.PaymentDate,
+                    TransactionId = orderHeader.TransactionId,
+                    PhoneNumber = orderHeader.PhoneNumber,
+                    StreetAddress = orderHeader.StreetAddress,
+                    City = orderHeader.City,
+                    State = orderHeader.State,
+                    PostalCode = orderHeader.PostalCode,
+                    FullName = orderHeader.FullName,
+                    Email = orderHeader.Email
+                }, orderId);
+
+                if (!updateResponse.Success)
+                {
+                    return new ResponseModel<bool>
+                    {
+                        Success = false,
+                        Data = false,
+                        Message = "Failed to update order status to In Process."
+                    };
+                }
+
+                _logger.LogInformation("Order status set to In Process for order header: {OrderHeaderId}", orderId);
+
+                return new ResponseModel<bool>
+                {
+                    Success = true,
+                    Data = true,
+                    Message = "Order is In Process."
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while starting processing for order header: {OrderHeaderId}", orderId);
+
+                return new ResponseModel<bool>
+                {
+                    Success = false,
+                    Data = false,
+                    Message = "An error occurred while processing the order."
+                };
+            }
+        }
+
+
+        public async Task<ResponseModel<bool>> ShipOrder(int orderId)
+        {
+            try
+            {
+                _logger.LogInformation("Shipping order: {OrderHeaderId}", orderId);
+
+                var response = await GetOrderHeaderDetails(orderId);
+                if (!response.Success || response.Data == null)
+                {
+                    return new ResponseModel<bool>
+                    {
+                        Success = false,
+                        Data = false,
+                        Message = "Order header not found."
+                    };
+                }
+
+                var orderHeader = response.Data;
+                orderHeader.OrderStatus = WC.StatusShipped;
+                orderHeader.ShippingDate = DateTime.Now;
+
+                var updateResponse = await EditOrderHeader(new UpdateOrderHeaderDto
+                {
+                    CreatedByUserId = orderHeader.CreatedByUserId,
+                    OrderDate = orderHeader.OrderDate,
+                    ShippingDate = orderHeader.ShippingDate,
+                    FinalOrderTotal = orderHeader.FinalOrderTotal,
+                    OrderStatus = orderHeader.OrderStatus,
+                    PaymentDate = orderHeader.PaymentDate,
+                    TransactionId = orderHeader.TransactionId,
+                    PhoneNumber = orderHeader.PhoneNumber,
+                    StreetAddress = orderHeader.StreetAddress,
+                    City = orderHeader.City,
+                    State = orderHeader.State,
+                    PostalCode = orderHeader.PostalCode,
+                    FullName = orderHeader.FullName,
+                    Email = orderHeader.Email
+                }, orderId);
+
+                if (!updateResponse.Success)
+                {
+                    return new ResponseModel<bool>
+                    {
+                        Success = false,
+                        Data = false,
+                        Message = "Failed to update order status to Shipped."
+                    };
+                }
+
+                _logger.LogInformation("Order shipped successfully: {OrderHeaderId}", orderId);
+
+                return new ResponseModel<bool>
+                {
+                    Success = true,
+                    Data = true,
+                    Message = "Order shipped successfully."
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while shipping the order: {OrderHeaderId}", orderId);
+
+                return new ResponseModel<bool>
+                {
+                    Success = false,
+                    Data = false,
+                    Message = "An error occurred while processing the shipment."
+                };
+            }
+        }
+
+        public async Task<ResponseModel<bool>> CancelOrder(int orderId)
+        {
+            try
+            {
+                _logger.LogInformation("Cancelling order: {OrderHeaderId}", orderId);
+
+                var response = await GetOrderHeaderDetails(orderId);
+                if (!response.Success || response.Data == null)
+                {
+                    return new ResponseModel<bool>
+                    {
+                        Success = false,
+                        Data = false,
+                        Message = "Order not found."
+                    };
+                }
+
+                var orderHeader = response.Data;
+
+                // Uncomment and configure Braintree transaction cancellation when ready
+                // var gateway = _brainTreeGate.GetGateway();
+                // Transaction transaction = gateway.Transaction.Find(orderHeader.TransactionId);
+                // if (transaction.Status == TransactionStatus.AUTHORIZED || transaction.Status == TransactionStatus.SUBMITTED_FOR_SETTLEMENT)
+                // {
+                //     // Void the transaction if it hasn't been settled yet
+                //     Result<Transaction> resultVoid = gateway.Transaction.Void(orderHeader.TransactionId);
+                // }
+                // else
+                // {
+                //     // Refund the transaction if it has already been settled
+                //     Result<Transaction> resultRefund = gateway.Transaction.Refund(orderHeader.TransactionId);
+                // }
+
+                orderHeader.OrderStatus = WC.StatusRefunded;
+
+                var updateResponse = await EditOrderHeader(new UpdateOrderHeaderDto
+                {
+                    CreatedByUserId = orderHeader.CreatedByUserId,
+                    OrderDate = orderHeader.OrderDate,
+                    ShippingDate = orderHeader.ShippingDate,
+                    FinalOrderTotal = orderHeader.FinalOrderTotal,
+                    OrderStatus = orderHeader.OrderStatus,
+                    PaymentDate = orderHeader.PaymentDate,
+                    TransactionId = orderHeader.TransactionId,
+                    PhoneNumber = orderHeader.PhoneNumber,
+                    StreetAddress = orderHeader.StreetAddress,
+                    City = orderHeader.City,
+                    State = orderHeader.State,
+                    PostalCode = orderHeader.PostalCode,
+                    FullName = orderHeader.FullName,
+                    Email = orderHeader.Email
+                }, orderId);
+
+                if (!updateResponse.Success)
+                {
+                    return new ResponseModel<bool>
+                    {
+                        Success = false,
+                        Data = false,
+                        Message = "Failed to update order status to Refunded."
+                    };
+                }
+
+                _logger.LogInformation("Order cancelled and status updated to refunded: {OrderHeaderId}", orderId);
+
+                return new ResponseModel<bool>
+                {
+                    Success = true,
+                    Data = true,
+                    Message = "Order cancelled and refunded successfully."
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while cancelling the order: {OrderHeaderId}", orderId);
+
+                return new ResponseModel<bool>
+                {
+                    Success = false,
+                    Data = false,
+                    Message = "An error occurred while processing the cancellation."
+                };
+            }
+        }
+
+
+        public async Task<ResponseModel<bool>> UpdateOrderDetails(OrderVM orderVM)
+        {
+            var response = await GetOrderHeaderDetails(orderVM.OrderHeader.Id);
+            if (!response.Success || response.Data == null)
+            {
+                return new ResponseModel<bool>
+                {
+                    Success = false,
+                    Data = false,
+                    Message = "Order not found."
+                };
+            }
+
+            var orderHeader = response.Data;
+
+            // Update order details based on the orderVM
+            orderHeader.FullName = orderVM.OrderHeader.FullName;
+            orderHeader.PhoneNumber = orderVM.OrderHeader.PhoneNumber;
+            orderHeader.StreetAddress = orderVM.OrderHeader.StreetAddress;
+            orderHeader.City = orderVM.OrderHeader.City;
+            orderHeader.State = orderVM.OrderHeader.State;
+            orderHeader.PostalCode = orderVM.OrderHeader.PostalCode;
+            orderHeader.Email = orderVM.OrderHeader.Email;
+
+            // Map to UpdateOrderHeaderDto
+            var updateOrderHeaderDto = MapToUpdateOrderHeaderDto(orderHeader);
+
+            // Call EditOrderHeader to save the updated details
+            var updateResponse = await EditOrderHeader(updateOrderHeaderDto, orderHeader.Id);
+            if (!updateResponse.Success)
+            {
+                return new ResponseModel<bool>
+                {
+                    Success = false,
+                    Data = false,
+                    Message = "Failed to update order details."
+                };
+            }
+
+            return new ResponseModel<bool>
+            {
+                Success = true,
+                Data = true,
+                Message = "Order details updated successfully."
+            };
+        }
+
+        private UpdateOrderHeaderDto MapToUpdateOrderHeaderDto(OrderHeaderDto orderHeaderDto)
+        {
+            return new UpdateOrderHeaderDto
+            {
+                CreatedByUserId = orderHeaderDto.CreatedByUserId,
+                OrderDate = orderHeaderDto.OrderDate,
+                ShippingDate = orderHeaderDto.ShippingDate,
+                FinalOrderTotal = orderHeaderDto.FinalOrderTotal,
+                OrderStatus = orderHeaderDto.OrderStatus,
+                PaymentDate = orderHeaderDto.PaymentDate,
+                TransactionId = orderHeaderDto.TransactionId,
+                PhoneNumber = orderHeaderDto.PhoneNumber,
+                StreetAddress = orderHeaderDto.StreetAddress,
+                City = orderHeaderDto.City,
+                State = orderHeaderDto.State,
+                PostalCode = orderHeaderDto.PostalCode,
+                FullName = orderHeaderDto.FullName,
+                Email = orderHeaderDto.Email
+            };
+        }
+
+
     }
 }
