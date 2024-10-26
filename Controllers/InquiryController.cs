@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using MansorySupplyHub.Implementation.Interface;
 using MansorySupplyHub.Models;
 using MansorySupplyHub.Utility;
-using MansorySupplyHub.Entities;
 
 namespace MansorySupplyHub.Controllers
 {
@@ -29,50 +28,31 @@ namespace MansorySupplyHub.Controllers
 
         public async Task<IActionResult> Details(int id)
         {
-            var inquiryHeaderResponse = await _inqHService.GetInquiryHeaderDetails(id);
-            var inquiryDetailsResponse = await _inqDService.GetInquiryDetailsByHeaderId(id);
+            var inquiryDetailsResponse = await _inqHService.GetInquiryDetailsVM(id);
 
-            if (!inquiryHeaderResponse.Success || !inquiryDetailsResponse.Success)
+            if (!inquiryDetailsResponse.Success)
             {
-                TempData[WC.Error] = "Unable to load inquiry details.";
+                TempData[WC.Error] = inquiryDetailsResponse.Message;
                 return RedirectToAction(nameof(Index));
             }
 
-            InquiryVM inquiryVM = new InquiryVM()
-            {
-                InquiryHeader = inquiryHeaderResponse.Data,
-                InquiryDetail = inquiryDetailsResponse.Data
-            };
-
-            return View(inquiryVM);
+            return View(inquiryDetailsResponse.Data);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Details()
         {
-            var inquiryDetailsResponse = await _inqDService.GetInquiryDetailsByHeaderId(InquiryVM.InquiryHeader.Id);
+            var cartResponse = await _inqDService.ConvertInquiryToCart(InquiryVM.InquiryHeader.Id);
 
-            if (!inquiryDetailsResponse.Success)
+            if (!cartResponse.Success)
             {
-                TempData[WC.Error] = "Unable to load inquiry details.";
+                TempData[WC.Error] = cartResponse.Message;
                 return RedirectToAction(nameof(Index));
             }
 
-            List<ShoppingCart> shoppingCartList = new List<ShoppingCart>();
-
-            foreach (var detail in inquiryDetailsResponse.Data)
-            {
-                ShoppingCart shoppingCart = new ShoppingCart()
-                {
-                    ProductId = detail.ProductId,
-                    Sqft = 1  
-                };
-                shoppingCartList.Add(shoppingCart);
-            }
-
             HttpContext.Session.Clear();
-            HttpContext.Session.Set(WC.SessionCart, shoppingCartList);
+            HttpContext.Session.Set(WC.SessionCart, cartResponse.Data);
             HttpContext.Session.Set(WC.SessionInquiryId, InquiryVM.InquiryHeader.Id);
             return RedirectToAction("Index", "Cart");
         }
@@ -103,9 +83,7 @@ namespace MansorySupplyHub.Controllers
                 return Json(new { error = "Unable to load inquiry list." });
             }
 
-            var inquiryHeaders = inquiryHeadersResponse.Data;
-
-            var data = inquiryHeaders.Select(inquiryHeader => new
+            var data = inquiryHeadersResponse.Data.Select(inquiryHeader => new
             {
                 id = inquiryHeader.Id,
                 fullName = inquiryHeader.FullName,

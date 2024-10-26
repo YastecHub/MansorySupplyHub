@@ -12,12 +12,14 @@ namespace MansorySupplyHub.Implementation.Services
         private readonly ApplicationDbContext _dbcontext;
         private readonly ILogger<InquiryHeaderService> _logger;
         private readonly IEmailService _emailService;
+        private readonly IInquiryDetailService _inqDService;
 
-        public InquiryHeaderService(ApplicationDbContext dbcontext, ILogger<InquiryHeaderService> logger, IEmailService emailService)
+        public InquiryHeaderService(ApplicationDbContext dbcontext, ILogger<InquiryHeaderService> logger, IEmailService emailService, IInquiryDetailService inqDService)
         {
             _dbcontext = dbcontext;
             _logger = logger;
             _emailService = emailService;
+            _inqDService = inqDService;
         }
 
         public async Task<ResponseModel<InquiryHeaderDto>> CreateInquiryHeader(CreateInquiryHeaderDto request)
@@ -307,6 +309,31 @@ namespace MansorySupplyHub.Implementation.Services
             {
                 _logger.LogDebug("GetInquiryHeaderDetails method execution completed.");
             }
+        }
+
+        public async Task<ResponseModel<InquiryVM>> GetInquiryDetailsVM(int id)
+        {
+            var inquiryHeaderResponse = await GetInquiryHeaderDetails(id);
+            var inquiryDetailsResponse = await _inqDService.GetInquiryDetailsByHeaderId(id);
+
+            if (!inquiryHeaderResponse.Success || !inquiryDetailsResponse.Success)
+            {
+                return new ResponseModel<InquiryVM>
+                {
+                    Success = false,
+                    Message = "Unable to load inquiry details."
+                };
+            }
+
+            return new ResponseModel<InquiryVM>
+            {
+                Success = true,
+                Data = new InquiryVM
+                {
+                    InquiryHeader = inquiryHeaderResponse.Data,
+                    InquiryDetail = inquiryDetailsResponse.Data
+                }
+            };
         }
     }
 }

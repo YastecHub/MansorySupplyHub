@@ -262,5 +262,32 @@ namespace MansorySupplyHub.Implementation.Services
                 };
             }
         }
+
+        public async Task<ResponseModel<List<ShoppingCart>>> ConvertInquiryToCart(int inquiryId)
+        {
+            var inquiryDetailsResponse = await GetInquiryDetailsByHeaderId(inquiryId);
+
+            if (!inquiryDetailsResponse.Success)
+            {
+                return new ResponseModel<List<ShoppingCart>>
+                {
+                    Success = false,
+                    Message = "Unable to load inquiry details."
+                };
+            }
+
+            var shoppingCartList = inquiryDetailsResponse.Data
+                .Select(detail => new ShoppingCart
+                {
+                    ProductId = detail.ProductId,
+                    Sqft = 1
+                }).ToList();
+
+            return new ResponseModel<List<ShoppingCart>>
+            {
+                Success = true,
+                Data = shoppingCartList
+            };
+        }
     }
 }

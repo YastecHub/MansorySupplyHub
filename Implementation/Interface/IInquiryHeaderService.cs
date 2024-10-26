@@ -10,5 +10,6 @@ namespace MansorySupplyHub.Implementation.Interface
         Task<ResponseModel<bool>> DeleteInquiryHeader(int id);
         Task<ResponseModel<List<InquiryHeaderDto>>> GetAllInquiryHeaders();
         Task<ResponseModel<InquiryHeaderDto>> GetInquiryHeaderDetails(int id);
+        Task<ResponseModel<InquiryVM>> GetInquiryDetailsVM(int id);
     }
 }
