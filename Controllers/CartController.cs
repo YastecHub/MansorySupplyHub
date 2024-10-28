@@ -43,28 +43,13 @@ namespace MansorySupplyHub.Controllers
         [ActionName("Index")]
         public async Task<IActionResult> Index()
         {
-            var shoppingCartSession = HttpContext.Session.Get<IEnumerable<ShoppingCart>>(WC.SessionCart);
-            var shoppingCartList = shoppingCartSession?.ToList() ?? new List<ShoppingCart>();
-            var productIds = shoppingCartList.Select(i => i.ProductId).ToList();
-
-            var result = await _cartService.GetProductsInCart(productIds);
+            var result = await _cartService.GetCartProductsWithQuantities(HttpContext);
             if (result.Success)
             {
-                var products = result.Data;
-
-                foreach (var cartItem in shoppingCartList)
-                {
-                    var product = products.FirstOrDefault(p => p.Id == cartItem.ProductId);
-                    if (product != null)
-                    {
-                        product.TempSqft = cartItem.Sqft;
-                    }
-                }
-
-                return View(products);
+                return View(result.Data);
             }
 
-            _notyf.Error("Failed to load cart items.");
+            _notyf.Error(result.Message ?? "Failed to load cart items.");
             return View(new List<ProductDto>());
         }
 
@@ -73,67 +58,37 @@ namespace MansorySupplyHub.Controllers
         [ActionName("Index")]
         public IActionResult IndexPost(IEnumerable<Product> ProdList)
         {
-            List<ShoppingCart> shoppingCartList = new List<ShoppingCart>();
-            foreach (Product prod in ProdList)
-            {
-                shoppingCartList.Add(new ShoppingCart { ProductId = prod.Id, Sqft = prod.TempSqft });
-            }
-
-            HttpContext.Session.Set(WC.SessionCart, shoppingCartList);
+            _cartService.UpdateSessionCart(ProdList, HttpContext);
             return RedirectToAction(nameof(Summary));
         }
 
         [HttpGet("cart-summary")]
         public async Task<IActionResult> Summary()
         {
-            var gateway = _brainTreeGate.GetGateway();
-            var clientToken = gateway.ClientToken.Generate();
-            ViewBag.ClientToken = clientToken;
-
             var claimsIdentity = (ClaimsIdentity)User.Identity;
             var claim = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier);
             var userId = claim?.Value;
 
             if (string.IsNullOrEmpty(userId))
             {
-                _notyf.Error("User not logged in.");
-                return RedirectToAction("Login", "Account");
+                _notyf.Error("User not logged in, Please Login or Register here");
+                return Redirect("/Identity/Account/Login");
+
             }
 
-            var shoppingCartSession = HttpContext.Session.Get<IEnumerable<ShoppingCart>>(WC.SessionCart);
-            var shoppingCartList = shoppingCartSession?.ToList() ?? new List<ShoppingCart>();
-
-            if (!shoppingCartList.Any())
-            {
-                _notyf.Warning("Your cart is empty.");
-                return RedirectToAction("Index");
-            }
-
-            var productIds = shoppingCartList.Select(i => i.ProductId).ToList();
-            var result = await _cartService.GetUserCartDetails(userId, productIds);
+            var result = await _cartService.GetCartSummaryAsync(userId);
 
             if (!result.Success)
             {
-                _notyf.Error("Failed to load cart summary. Please try again.");
+                _notyf.Warning(result.Message); 
                 return RedirectToAction("Index");
             }
 
-            var productUserDto = result.Data;
+            var gateway = _brainTreeGate.GetGateway();
+            var clientToken = gateway.ClientToken.Generate();
+            ViewBag.ClientToken = clientToken;
 
-            // Map TempSqft and other properties from session to the ProductUserDto
-            foreach (var cartItem in shoppingCartList)
-            {
-                var product = productUserDto.ProductList.FirstOrDefault(p => p.Id == cartItem.ProductId);
-                if (product != null)
-                {
-                    product.TempSqft = cartItem.Sqft;
-                    // Calculate total price based on TempSqft and Price
-                    product.Price = product.Price; // Ensure price is not null
-                    product.TotalPrice = product.TempSqft * product.Price; // Assuming you have a TotalPrice property
-                }
-            }
-
-            return View(productUserDto);
+            return View(result.Data);
         }
 
         [HttpPost("cart-summary")]
@@ -147,7 +102,7 @@ namespace MansorySupplyHub.Controllers
             if (string.IsNullOrEmpty(userId))
             {
                 _notyf.Error("User not logged in.");
-                return RedirectToAction("Login", "Account");
+                return RedirectToAction("Account", "Login");
             }
 
             var shoppingCartSession = HttpContext.Session.Get<IEnumerable<ShoppingCart>>(WC.SessionCart);
@@ -158,136 +113,28 @@ namespace MansorySupplyHub.Controllers
                 _notyf.Warning("Your cart is empty.");
                 return RedirectToAction(nameof(Index));
             }
-            //var orderTotal = 0.0;
+
             if (User.IsInRole(WC.AdminRole))
             {
-                //foreach (var cartItem in shoppingCartList)
-                //{
-                //    var product = productUserDto.ProductList.FirstOrDefault(p => p.Id == cartItem.ProductId);
-                //    if (product != null)
-                //    {
-                //        // Assume product.TotalPrice was calculated in the Summary view
-                //        orderTotal += product.TotalPrice;
-                //    }
-                //}
-                // Create an Order for Admin
-                var orderHeader = new CreateOrderHeaderDto
-                {
-                    ApplicationUserId = userId,
-                    OrderDate = DateTime.Now,
-                    FullName = productUserDto.ApplicationUser.FullName,
-                    PhoneNumber = productUserDto.ApplicationUser.PhoneNumber,
-                    Email = productUserDto.ApplicationUser.Email,
-                    City = productUserDto.ApplicationUser.City,
-                    State = productUserDto.ApplicationUser.State,
-                    CreatedByUserId = userId,
-                    PostalCode = productUserDto.ApplicationUser.PostalCode,
-                    StreetAddress = productUserDto.ApplicationUser.StreetAddress,
-                    OrderStatus = WC.StatusPending,
-                    FinalOrderTotal = ProductUserVM.ProductList.Sum(x => x.TempSqft * x.Price),
-                };
-
-                var orderHeaderResponse = await _orderHeaderService.CreateOrderHeader(orderHeader);
-                if (!orderHeaderResponse.Success)
-                {
-                    _notyf.Error("Failed to create order.");
-                    return RedirectToAction(nameof(Summary));
-                }
-
-                var orderHeaderId = orderHeaderResponse.Data.Id;
-
-                foreach (var cartItem in shoppingCartList)
-                {
-                    var orderDetail = new CreateOrderDetailDto
-                    {
-                        OrderHeaderId = orderHeaderId,
-                        ProductId = cartItem.ProductId,
-                        Sqft = cartItem.TempSqft,
-                        PricePerSqFt = productUserDto.ProductList.FirstOrDefault(p => p.Id == cartItem.ProductId)?.Price ?? 0
-                    };
-
-                    var orderDetailResponse = await _orderDetailService.CreateOrderDetail(orderDetail);
-                    if (!orderDetailResponse.Success)
-                    {
-                        _notyf.Error("Failed to create order detail.");
-                        return RedirectToAction(nameof(Summary));
-                    }
-                }
-
                 string nonceFromTheClient = collection["payment_method_nonce"];
-                _notyf.Information($"Nonce received: {nonceFromTheClient}");
+                var orderResponse = await _cartService.CreateOrderAsync(productUserDto, userId, shoppingCartList, nonceFromTheClient);
 
-                // Log the transaction request details
-                var request = new TransactionRequest
+                if (!orderResponse.Success)
                 {
-                    Amount = Convert.ToDecimal(orderHeader.FinalOrderTotal),
-                    PaymentMethodNonce = nonceFromTheClient ?? "",
-                    OrderId = orderHeader.Id.ToString(),
-                    Options = new TransactionOptionsRequest
-                    {
-                        SubmitForSettlement = true
-                    }
-                };
-
-
-                _notyf.Information($"Transaction Request - Amount: {request.Amount}, OrderId: {request.OrderId}");
-
-                var gateway = _brainTreeGate.GetGateway();
-                Result<Transaction> result = gateway.Transaction.Sale(request);
-
-                if (result == null)
-                {
-                    _notyf.Error("Payment transaction failed: No response from the payment gateway.");
-                    orderHeader.OrderStatus = WC.StatusCancelled;
-                    return RedirectToAction(nameof(Summary));
-                }
-
-                if (result.Target == null)
-                {
-                    _notyf.Error("Payment transaction failed: Target was null.");
-                    orderHeader.OrderStatus = WC.StatusCancelled;
+                    _notyf.Error(orderResponse.Message);
                     return RedirectToAction(nameof(Summary));
                 }
 
                 return RedirectToAction(nameof(Summary));
-
             }
             else
             {
-                // Create an Inquiry for regular users
-                var inquiryHeader = new CreateInquiryHeaderDto
-                {
-                    ApplicationUserId = userId,
-                    InquiryDate = DateTime.Now,
-                    FullName = productUserDto.ApplicationUser.FullName,
-                    PhoneNumber = productUserDto.ApplicationUser.PhoneNumber,
-                    Email = productUserDto.ApplicationUser.Email
-                };
+                var inquiryResponse = await _cartService.CreateInquiryAsync(productUserDto, userId, shoppingCartList);
 
-                var inquiryHeaderResponse = await _inqHService.CreateInquiryHeader(inquiryHeader);
-                if (!inquiryHeaderResponse.Success)
+                if (!inquiryResponse.Success)
                 {
-                    _notyf.Error("Failed to create inquiry header.");
+                    _notyf.Error(inquiryResponse.Message);
                     return RedirectToAction(nameof(Summary));
-                }
-
-                var inquiryHeaderId = inquiryHeaderResponse.Data.Id;
-
-                foreach (var cartItem in shoppingCartList)
-                {
-                    var inquiryDetail = new CreateInquiryDetailDto
-                    {
-                        InquiryHeaderId = inquiryHeaderId,
-                        ProductId = cartItem.ProductId,
-                        Sqft = cartItem.Sqft
-                    };
-
-                    var inquiryDetailResponse = await _inqDService.CreateInquiryDetail(inquiryDetail);
-                    if (!inquiryDetailResponse.Success)
-                    {
-                        _notyf.Error("Failed to create inquiry detail.");
-                        return RedirectToAction(nameof(Summary));
-                    }
                 }
 
                 // Send email confirmation
@@ -308,10 +155,9 @@ namespace MansorySupplyHub.Controllers
                 }
 
                 HttpContext.Session.Clear();
-                return RedirectToAction(nameof(InquiryConfirmation), new { id = inquiryHeaderId, isOrder = false });
+                return RedirectToAction(nameof(InquiryConfirmation), new { id = inquiryResponse.Data.Id, isOrder = false });
             }
         }
-
 
         [HttpGet("cart-confirmation")]
         public async Task<IActionResult> InquiryConfirmation(int id, bool isOrder)

@@ -52,8 +52,6 @@ namespace MansorySupplyHub.Controllers
             return View(orderListVM);
         }
 
-
-
         public async Task<IActionResult> Details(int id)
         {
             var headerResponse = await _orderHeaderService.GetOrderHeaderDetails(id);
